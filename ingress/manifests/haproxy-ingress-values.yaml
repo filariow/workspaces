@@ -1,0 +1,13 @@
+controller:
+  hostNetwork: true
+  ingressClassResource:
+    enabled: true
+  service:
+    httpPorts:
+    - port: 80
+      targetPort: http
+      nodePort: 30080
+    httpsPorts:
+    - port: 443
+      targetPort: https
+      nodePort: 30443
