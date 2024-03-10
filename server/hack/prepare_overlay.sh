@@ -2,20 +2,22 @@
 
 set -e -o pipefail
 
-_manifests_folder_relative="$1"
+# parsing positional arguments
+[[ "$#" -ne "6" ]] && echo "expected 6 arguments, found $#" && exit 1
+_manifests_folder="$1"
 _overlay="$2"
 _namespace="$3"
 _image="$4"
 _toolchain_host_ns="$5"
 _domain="$6"
 
+# tooling
 KUBECLI=${KUBECLI:-kubectl}
 KUSTOMIZE=${KUSTOMIZE:-kustomize}
 
-overlay_folder="$(realpath "${_manifests_folder_relative}/overlays/${_overlay}")"
-
 # adding local overlay
-mkdir "${overlay_folder}"
+overlay_folder="$(realpath "${_manifests_folder}/overlays")/${_overlay}"
+mkdir -p "${overlay_folder}"
 cd "${overlay_folder}"
 
 ${KUSTOMIZE} create
@@ -32,4 +34,10 @@ cat << EOF > 'patch-ingress.yaml'
   path: /spec/rules/0/host
   value: api-workspaces.${_domain}
 EOF
-${KUSTOMIZE} edit add patch 'patch-ingress.yaml'
+
+${KUSTOMIZE} edit add patch \
+  --path='patch-ingress.yaml' \
+  --group='networking.k8s.io' \
+  --version='v1' \
+  --kind='Ingress' \
+  --name='workspaces-api'

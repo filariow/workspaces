@@ -4,7 +4,8 @@ set -e
 
 export QUAY_NAMESPACE=${QUAY_NAMESPACE:-workspaces}
 
-f=$(mktemp --directory /tmp/workspaces-demo.XXXX)
+f="$(pwd)"
+[[ "${f}" == "/tmp/*" ]] || f=$(mktemp --directory /tmp/workspaces-demo.XXXX)
 
 cp -r hack/ operator/ e2e/ server/ "$f"
 cd "$f" 

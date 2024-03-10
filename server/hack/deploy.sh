@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e -o pipefail
+set -e -o pipefail +x
 
 _namespace="$1"
 _image="$2"
@@ -12,28 +12,29 @@ KUBECLI=${KUBECLI:-kubectl}
 KUSTOMIZE=${KUSTOMIZE:-kustomize}
 
 # retrieving toolchain-host namespace
-_toolchain_host_ns=$(${KUBECLI} get namespaces -o name | grep toolchain-host | cut -d'/' -f2 | head -n 1)
-if [[ -z "${_toolchain_host_ns}" ]]; then
-    _toolchain_host_ns="toolchain-host_operator"
+toolchain_host_ns=$(${KUBECLI} get namespaces -o name | grep toolchain-host | cut -d'/' -f2 | head -n 1)
+if [[ -z "${toolchain_host_ns}" ]]; then
+    toolchain_host_ns="toolchain-host_operator"
 fi
 
 # retrieve OCP cluster domain
-_domain=$(oc get dns cluster -o jsonpath='{ .spec.baseDomain }')
+domain=$(oc get dns cluster -o jsonpath='{ .spec.baseDomain }')
 
 # prepare temporary folder
-_f=$(mktemp --directory /tmp/workspaces-rest.XXXXX)
-cp -r "${ROOT_DIR}/server/manifests" "${_f}/manifests"
+wd=$(mktemp --directory /tmp/workspaces-rest.XXXXX)
+cp -r "${ROOT_DIR}/server/manifests" "${wd}/manifests"
 
-./prepare_overlay.sh \
-  "${ROOT_DIR}/manifests" \
+# prepare overlay in the temporary folder
+"${DIR}/prepare_overlay.sh" \
+  "${wd}/manifests" \
   "local" \
   "${_namespace}" \
   "${_image}" \
-  "${_toolchain_host_ns}" \
-  "${_domain}"
+  "${toolchain_host_ns}" \
+  "apps.${domain}"
 
 # apply manifests
-${KUSTOMIZE} build . | ${KUBECLI} apply -f -
+${KUSTOMIZE} build "${wd}/manifests/overlays/local" | ${KUBECLI} apply -f -
 
 # cleanup
-rm -r "${_f}"
+rm -r "${wd}"
