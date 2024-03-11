@@ -1,0 +1,5 @@
+# https://github.com/nginxinc/kubernetes-ingress/blob/main/charts/nginx-ingress/values.yaml
+controller:
+  ingressClassResource:
+    name: workspaces-proxy
+  ingressClass: workspaces-proxy
