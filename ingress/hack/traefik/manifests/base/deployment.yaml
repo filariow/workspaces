@@ -4,27 +4,32 @@ metadata:
   name: ingress-proxy
   namespace: system
   labels:
-    app: traefik
+    app: ingress-proxy
 
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: traefik
+      app: ingress-proxy
   template:
     metadata:
       labels:
-        app: traefik
+        app: ingress-proxy
     spec:
       serviceAccountName: traefik-account
       containers:
         - name: traefik
           image: traefik:v2.11
           args:
+            - --log.level=DEBUG
             - --api.insecure
+            - --entrypoints.web.address=:8000
             - --providers.kubernetesingress
+            - --providers.kubernetescrd.ingressclass=workspaces-ingress-internal
+            - --providers.kubernetesingress.ingressclass=workspaces-ingress-internal
+            - --providers.kubernetesingress.ingressendpoint.publishedservice=workspaces-system/workspaces-rest-api
           ports:
             - name: web
-              containerPort: 80
+              containerPort: 8000
             - name: dashboard
               containerPort: 8080

@@ -32,7 +32,7 @@ ${KUSTOMIZE} edit add configmap rest-api-server-config \
 cat << EOF > 'patch-ingress.yaml'
 - op: replace
   path: /spec/rules/0/host
-  value: api-workspaces.${_domain}
+  value: workspaces-ingress-proxy-${_namespace}.${_domain}
 EOF
 
 ${KUSTOMIZE} edit add patch \

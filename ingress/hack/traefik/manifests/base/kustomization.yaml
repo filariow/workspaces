@@ -6,5 +6,6 @@ resources:
 - rolebinding.yaml
 - deployment.yaml
 - service.yaml
+- ingressclass.yaml
 namespace: workspaces-system
 namePrefix: workspaces-
