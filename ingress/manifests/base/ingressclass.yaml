@@ -3,6 +3,6 @@ kind: IngressClass
 metadata:
   annotations:
     ingressclass.kubernetes.io/is-default-class: "false"
-  name: workspaces-ingress-internal
+  name: ingress-internal
 spec:
   controller: traefik.io/ingress-controller

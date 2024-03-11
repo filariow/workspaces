@@ -52,7 +52,7 @@ deploy-server:
 
 .PHONY: deploy-ingress
 deploy-ingress:
-	$(KUSTOMIZE) build ../ingress/hack/traefik/manifests/overlays/ocp | $(KUBECLI) apply -f - 
+	$(KUSTOMIZE) build ../ingress/manifests/overlays/ocp | $(KUBECLI) apply -f - 
 
 .PHONY: prepare
 prepare: build-images push-images deploy-workspaces
