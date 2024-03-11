@@ -30,19 +30,19 @@ spec:
             name: workspaces-rest-api-server
             port:
               number: 8080
-        path: /apis/workspaces.io/v1alpha1/workspaces/{name:[a-zA-Z0-9-]}
+        path: /apis/workspaces.io/v1alpha1/workspaces/{name:[a-zA-Z0-9-]+}
         pathType: Exact
       - backend:
           service:
             name: workspaces-rest-api-server
             port:
               number: 8080
-        path: /apis/workspaces.io/v1alpha1/namespaces/{namespace:[a-zA-Z0-9-]}/workspaces
+        path: /apis/workspaces.io/v1alpha1/namespaces/{namespace:[a-zA-Z0-9-]+}/workspaces
         pathType: Exact
       - backend:
           service:
             name: workspaces-rest-api-server
             port:
               number: 8080
-        path: /apis/workspaces.io/v1alpha1/namespaces/{namespace:[a-zA-Z0-9-]}/workspaces/{name:[a-zA-Z0-9-]}
+        path: /apis/workspaces.io/v1alpha1/namespaces/{namespace:[a-zA-Z0-9-]+}/workspaces/{name:[a-zA-Z0-9-]+}
         pathType: Exact
