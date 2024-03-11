@@ -24,6 +24,10 @@ push-images:
 	docker push $(OPERATOR_IMG) 
 	docker push $(SERVER_IMG)
 
+.PHONY: deploy-workspaces
+deploy-workspaces: deploy-operator deploy-server deploy-ingress
+	@:
+
 .PHONY: deploy-operator
 deploy-operator:
 	(\
@@ -39,12 +43,19 @@ deploy-operator:
 					--from-literal=kubesaw.namespace=$$(( [[ -n "$$toolchain_host" ]] && echo "$$toolchain_host" ) || echo "workspaces-system" ) \
 			) \
 		) && \
-		IMG=$(OPERATOR_IMG) make install deploy && \
-		IMG=$(SERVER_IMG) make -C ../server deploy \
+		IMG=$(OPERATOR_IMG) make install deploy \
 	)
 
+.PHONY: deploy-server
+deploy-server:
+	IMG=$(SERVER_IMG) make -C ../server deploy
+
+.PHONY: deploy-ingress
+deploy-ingress:
+	$(KUSTOMIZE) build ../ingress/hack/traefik/manifests/overlays/ocp | $(KUBECLI) apply -f - 
+
 .PHONY: prepare
-prepare: build-images push-images deploy-operator
+prepare: build-images push-images deploy-workspaces
 	@:
 
 .PHONY: test
