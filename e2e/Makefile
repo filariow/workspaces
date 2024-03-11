@@ -10,6 +10,8 @@ OPERATOR_IMG ?= quay.io/$(QUAY_NAMESPACE)/workspaces-op:test-${DATE_SUFFIX}
 SERVER_IMG ?= quay.io/$(QUAY_NAMESPACE)/workspaces-rest:test-${DATE_SUFFIX}
 CONCURRENCY ?= 1
 
+INGRESS_ROUTE := workspaces-ingress-proxy
+
 .PHONY: vet
 vet:
 	$(GO) vet ./...
@@ -60,14 +62,14 @@ prepare: build-images push-images deploy-workspaces
 
 .PHONY: test
 test: vet clean
-	PROXY_URL=$$($(KUBECLI) get route workspaces-rest-api-server -n workspaces-system -o jsonpath='{.status.ingress[0].host}') \
+	PROXY_URL=$$($(KUBECLI) get route $(INGRESS_ROUTE) -n workspaces-system -o jsonpath='{.status.ingress[0].host}') \
 	KUBESPACE_NAMESPACE=$$($(KUBECLI) get namespaces -o name | grep toolchain-host | cut -d'/' -f2) \
 		WORKSPACES_NAMESPACE="workspaces-system" \
 		$(GO) test ./... $(V) --godog.tags=~skip --godog.concurrency=$(CONCURRENCY)
 
 .PHONY: wip
 wip: vet clean
-	PROXY_URL=$$($(KUBECLI) get route workspaces-rest-api-server -n workspaces-system -o jsonpath='{.status.ingress[0].host}') \
+	PROXY_URL=$$($(KUBECLI) get route $(INGRESS_ROUTE) -n workspaces-system -o jsonpath='{.status.ingress[0].host}') \
 	KUBESPACE_NAMESPACE=$$($(KUBECLI) get namespaces -o name | grep toolchain-host | cut -d'/' -f2) \
 		WORKSPACES_NAMESPACE="workspaces-system" \
 		$(GO) test ./... -v -failfast -count 1 --godog.tags=wip
