@@ -20,20 +20,23 @@ const (
 func New(
 	logger *slog.Logger,
 	addr string,
+	jwtMiddlewareBuilder auth.JwtBearerMiddlewareBuilder,
 	readHandle workspace.ReadWorkspaceQueryHandlerFunc,
 	listHandle workspace.ListWorkspaceQueryHandlerFunc,
 	createHandle workspace.CreateWorkspaceCreateHandlerFunc,
 	updateHandle workspace.UpdateWorkspaceCommandHandlerFunc,
 ) *http.Server {
+	h := buildServerHandler(logger, jwtMiddlewareBuilder, readHandle, listHandle, createHandle, updateHandle)
 	return &http.Server{
 		Addr:              addr,
-		Handler:           buildServerHandler(logger, readHandle, listHandle, createHandle, updateHandle),
+		Handler:           h,
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 }
 
 func buildServerHandler(
 	logger *slog.Logger,
+	jwtMiddlewareBuilder auth.JwtBearerMiddlewareBuilder,
 	readHandle workspace.ReadWorkspaceQueryHandlerFunc,
 	listHandle workspace.ListWorkspaceQueryHandlerFunc,
 	createHandle workspace.CreateWorkspaceCreateHandlerFunc,
@@ -41,7 +44,7 @@ func buildServerHandler(
 ) http.Handler {
 	mux := http.NewServeMux()
 	addHealthz(mux)
-	addWorkspaces(mux, readHandle, listHandle, createHandle, updateHandle)
+	addWorkspaces(mux, jwtMiddlewareBuilder, readHandle, listHandle, createHandle, updateHandle)
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	})
@@ -57,6 +60,7 @@ func buildServerHandler(
 
 func addWorkspaces(
 	mux *http.ServeMux,
+	jwtMiddlewareBuilder auth.JwtBearerMiddlewareBuilder,
 	readHandle workspace.ReadWorkspaceQueryHandlerFunc,
 	listHandle workspace.ListWorkspaceQueryHandlerFunc,
 	postHandle workspace.CreateWorkspaceCreateHandlerFunc,
@@ -64,15 +68,17 @@ func addWorkspaces(
 ) {
 	// Read
 	mux.Handle(fmt.Sprintf("GET %s/{name}", NamespacedWorkspacesPrefix),
-		auth.NewJwtBearerMiddleware(
+		jwtMiddlewareBuilder.WithNext(
 			workspace.NewReadWorkspaceHandler(
 				workspace.MapReadWorkspaceHttp,
 				readHandle,
 				marshal.DefaultMarshalerProvider,
-			)))
+			),
+		),
+	)
 
 	// List
-	lh := auth.NewJwtBearerMiddleware(
+	lh := jwtMiddlewareBuilder.WithNext(
 		workspace.NewListWorkspaceHandler(
 			workspace.MapListWorkspaceHttp,
 			listHandle,
@@ -84,24 +90,30 @@ func addWorkspaces(
 	mux.Handle(fmt.Sprintf("GET %s", NamespacedWorkspacesPrefix), lh)
 
 	// Update
-	mux.Handle(fmt.Sprintf("PUT %s/{name}", NamespacedWorkspacesPrefix),
-		auth.NewJwtBearerMiddleware(
+	mux.Handle(
+		fmt.Sprintf("PUT %s/{name}", NamespacedWorkspacesPrefix),
+		jwtMiddlewareBuilder.WithNext(
 			workspace.NewUpdateWorkspaceHandler(
 				workspace.MapUpdateWorkspaceHttp,
 				updateHandle,
 				marshal.DefaultMarshalerProvider,
 				marshal.DefaultUnmarshalerProvider,
-			)))
+			),
+		),
+	)
 
 	// Create
-	mux.Handle(fmt.Sprintf("POST %s", NamespacedWorkspacesPrefix),
-		auth.NewJwtBearerMiddleware(
+	mux.Handle(
+		fmt.Sprintf("POST %s", NamespacedWorkspacesPrefix),
+		jwtMiddlewareBuilder.WithNext(
 			workspace.NewPostWorkspaceHandler(
 				workspace.MapPostWorkspaceHttp,
 				postHandle,
 				marshal.DefaultMarshalerProvider,
 				marshal.DefaultUnmarshalerProvider,
-			)))
+			),
+		),
+	)
 }
 
 func addHealthz(mux *http.ServeMux) {
