@@ -14,6 +14,8 @@ KUSTOMIZE ?= $(BIN_FOLDER)/kustomize
 MOCKGEN ?= $(BIN_FOLDER)/mockgen
 YQ ?= $(BIN_FOLDER)/yq
 GOLANG_CI ?= $(GO) run -modfile $(shell dirname $(ROOT_DIR))/hack/tools/golang-ci/go.mod github.com/golangci/golangci-lint/cmd/golangci-lint
+CONTROLLER_GEN ?= $(BIN_FOLDER)/controller-gen
+CONTROLLER_TOOLS_VERSION ?= v0.14.0
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE)
@@ -37,6 +39,12 @@ $(YQ): $(BIN_FOLDER)
 		-o $(BIN_FOLDER)/yq \
 		github.com/mikefarah/yq/v4
 
+.PHONY: controller-gen
+controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary. If wrong version is installed, it will be overwritten.
+$(CONTROLLER_GEN): $(BIN_FOLDER)
+	test -s $(BIN_FOLDER)/controller-gen && $(BIN_FOLDER)/controller-gen --version | grep -q $(CONTROLLER_TOOLS_VERSION) || \
+	GOBIN=$(BIN_FOLDER) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
+
 .PHONY: all
 all: clean
 	@:
@@ -53,8 +61,8 @@ build:
 		-o $(BIN_FOLDER)/server \
 		main.go
 
-.PHONY: generate
-generate: mockgen
+.PHONY: generate-mock
+generate-mock: mockgen
 	@echo $(GO) generate ./...
 	@PATH=$(ROOT_DIR)/bin:${PATH} $(GO) generate ./...
 
@@ -67,7 +75,7 @@ lint:
 	$(GOLANG_CI) run ./...
 
 .PHONY: vet
-vet:
+vet-moc-mockk:
 	$(GO) vet ./...
 
 .PHONY: fmt
@@ -75,11 +83,11 @@ fmt:
 	$(GO) fmt ./...
 
 .PHONY: test
-test: generate
+test: generate-mock
 	$(GO) test ./...
 
 .PHONY: test-with-coverage
-test-with-coverage: generate
+test-with-coverage: generate-mock
 	$(GO) test ./... -covermode=atomic -coverprofile cover.out
 
 .PHONY: docker-build
@@ -89,3 +97,12 @@ docker-build:
 .PHONY: deploy
 deploy: kustomize yq
 	YQ="$(YQ)" KUSTOMIZE="$(KUSTOMIZE)" ./hack/deploy.sh "$(NAMESPACE)" "$(IMG)"
+
+.PHONY: manifests
+manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+
+.PHONY: generate
+generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+
