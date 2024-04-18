@@ -16,6 +16,16 @@ YQ ?= $(BIN_FOLDER)/yq
 GOLANG_CI ?= $(GO) run -modfile $(shell dirname $(ROOT_DIR))/hack/tools/golang-ci/go.mod github.com/golangci/golangci-lint/cmd/golangci-lint
 CONTROLLER_GEN ?= $(BIN_FOLDER)/controller-gen
 CONTROLLER_TOOLS_VERSION ?= v0.14.0
+KWOKCTL ?= $(BIN_FOLDER)/kwokctl
+
+.PHONY: kwokctl
+kwokctl: $(KWOKCTL)
+$(KWOKCTL):
+	test -s $(BIN_FOLDER)/kwokctl || \
+		$(GO) build \
+			-modfile $(shell dirname $(ROOT_DIR))/hack/tools/kwokctl/go.mod \
+			-o $(BIN_FOLDER)/kwokctl \
+			sigs.k8s.io/kwok/cmd/kwokctl
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE)
@@ -84,15 +94,14 @@ fmt:
 
 E2E_KUBECONFIG ?= /tmp/workspaces-e2e
 E2E_CLUSTERNAME ?= workspaces-e2e
-E2E_CLUSTER_PROVIDER ?= kwokctl
 
 .PHONY: test-e2e-create-cluster
 test-e2e-create-cluster:
-	KUBECONFIG=$(E2E_KUBECONFIG) $(E2E_CLUSTER_PROVIDER) create cluster --name workspaces-e2e
+	KUBECONFIG=$(E2E_KUBECONFIG) $(KWOKCTL) create cluster --name workspaces-e2e
 
 .PHONY: test-e2e-delete-cluster
 test-e2e-delete-cluster:
-	KUBECONFIG=$(E2E_KUBECONFIG) $(E2E_CLUSTER_PROVIDER) delete cluster --name workspaces-e2e
+	KUBECONFIG=$(E2E_KUBECONFIG) $(KWOKCTL) delete cluster --name workspaces-e2e
 
 .PHONY: test-e2e-prepare
 test-e2e-prepare:
