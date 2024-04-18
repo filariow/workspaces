@@ -16,7 +16,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -55,7 +54,7 @@ func buildScheme() (*runtime.Scheme, error) {
 	return s, nil
 }
 
-func NewWorkspacesCache(ctx context.Context, cfg *rest.Config, workspacesNamespaces, kubesawNamespaces string) (*Cache, error) {
+func NewCache(ctx context.Context, cfg *rest.Config, workspacesNamespaces, kubesawNamespaces string) (*Cache, error) {
 	s, err := buildScheme()
 	if err != nil {
 		return nil, err
@@ -171,6 +170,7 @@ func (c *Cache) buildWorkspaceApiFromWorkspace(ctx context.Context, workspace wo
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: mur,
 			Name:      name,
+			Labels:    workspace.Labels,
 		},
 		Spec: workspacesv1alpha1.WorkspaceSpec{
 			Visibility: workspace.Spec.Visibility,
@@ -183,7 +183,7 @@ func (c *Cache) buildWorkspaceApiFromWorkspace(ctx context.Context, workspace wo
 	return &w, nil
 }
 
-func (c *Cache) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.Options) error {
+func (c *Cache) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
 	out, ok := obj.(*workspacesapiv1alpha1.Workspace)
 	if !ok {
 		return fmt.Errorf("resource type not managed")
@@ -201,71 +201,11 @@ func (c *Cache) Get(ctx context.Context, key client.ObjectKey, obj client.Object
 	return nil
 }
 
-// NewCache creates a controller-runtime cache.Cache instance configured to monitor
-// spacebindings.toolchain.dev.openshift.com and workspaces.workspaces.io.
-// IMPORTANT: returned cache needs to be started and initialized.
-func NewCache(ctx context.Context, cfg *rest.Config, workspacesNamespace, kubesawNamespace string) (cache.Cache, error) {
-	s := runtime.NewScheme()
-	if err := corev1.AddToScheme(s); err != nil {
-		return nil, err
-	}
-	if err := metav1.AddMetaToScheme(s); err != nil {
-		return nil, err
-	}
-	if err := workspacesv1alpha1.AddToScheme(s); err != nil {
-		return nil, err
-	}
-	if err := toolchainv1alpha1.AddToScheme(s); err != nil {
-		return nil, err
+func (c *Cache) List(ctx context.Context, obj client.ObjectList, opts ...client.ListOption) error {
+	_, ok := obj.(*workspacesapiv1alpha1.WorkspaceList)
+	if !ok {
+		return fmt.Errorf("resource type not managed")
 	}
 
-	hc, err := rest.HTTPClientFor(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	m, err := apiutil.NewDynamicRESTMapper(cfg, hc)
-	if err != nil {
-		return nil, err
-	}
-
-	c, err := cache.New(cfg, cache.Options{
-		Scheme:                      s,
-		Mapper:                      m,
-		ReaderFailOnMissingInformer: true,
-		ByObject: map[client.Object]cache.ByObject{
-			&toolchainv1alpha1.SpaceBinding{}: {Namespaces: map[string]cache.Config{kubesawNamespace: {}}},
-			&workspacesv1alpha1.Workspace{}: {
-				Namespaces: map[string]cache.Config{
-					workspacesNamespace: {
-						Transform: func(obj interface{}) (interface{}, error) {
-							ws, ok := obj.(*workspacesv1alpha1.Workspace)
-							if !ok {
-								return obj, nil
-							}
-
-							if ws.Labels == nil {
-								ws.Labels = map[string]string{}
-							}
-
-							ws.Labels[LabelWorkspaceVisibility] = string(ws.Spec.Visibility)
-							return ws, nil
-						},
-					},
-				},
-			},
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err := c.GetInformer(ctx, &toolchainv1alpha1.SpaceBinding{}); err != nil {
-		return nil, err
-	}
-	if _, err := c.GetInformer(ctx, &workspacesv1alpha1.Workspace{}); err != nil {
-		return nil, err
-	}
-
-	return c, nil
+	panic("not implemented")
 }

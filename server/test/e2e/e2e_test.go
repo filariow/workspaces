@@ -76,7 +76,7 @@ var _ = Describe("controller", Ordered, func() {
 		Expect(err).To(BeNil())
 
 		// create cache
-		c, err := kube.NewWorkspacesCache(ctx, cfg, workspacesNamespace.Name, "kubesaw-system")
+		c, err := kube.NewCache(ctx, cfg, workspacesNamespace.Name, "kubesaw-system")
 		Expect(err).To(BeNil())
 		cache = c
 	})
@@ -122,8 +122,9 @@ var _ = Describe("controller", Ordered, func() {
 				Expect(err).To(BeNil())
 
 				aw := workspacesapiv1alpha1.Workspace{}
+				key := types.NamespacedName{Namespace: "my-workspaces-namespace", Name: "my-workspaces-name"}
 				err = wait.PollUntilContextTimeout(ctx, time.Second, 10*time.Second, true, func(ctx context.Context) (done bool, err error) {
-					if err := cache.Get(ctx, types.NamespacedName{Namespace: "my-workspaces-namespace", Name: "my-workspaces-name"}, &aw); err != nil {
+					if err := cache.Get(ctx, key, &aw); err != nil {
 						if errors.IsNotFound(err) {
 							return false, nil
 						}
@@ -132,6 +133,12 @@ var _ = Describe("controller", Ordered, func() {
 					return true, nil
 				})
 				Expect(err).To(BeNil())
+
+				Expect(aw.Name).To(Equal(key.Name))
+				Expect(aw.Namespace).To(Equal(key.Namespace))
+				Expect(aw.Spec.Visibility).To(Equal(w.Spec.Visibility))
+				Expect(aw.Labels).To(Equal(w.Labels))
+				Expect(aw.Status.Space).To(Equal(w.Name))
 			})
 		})
 	})

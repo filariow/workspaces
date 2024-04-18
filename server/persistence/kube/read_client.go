@@ -9,7 +9,6 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	toolchainv1alpha1 "github.com/codeready-toolchain/api/api/v1alpha1"
@@ -34,7 +33,7 @@ type ReadClient struct {
 }
 
 // NewReadClientWithCache creates a controller-runtime cache and use it as KubeReadClient's backend.
-func NewReadClientWithCache(ctx context.Context, cfg *rest.Config, workspacesNamespace, kubesawNamespace string) (*ReadClient, cache.Cache, error) {
+func NewReadClientWithCache(ctx context.Context, cfg *rest.Config, workspacesNamespace, kubesawNamespace string) (*ReadClient, *Cache, error) {
 	c, err := NewCache(ctx, cfg, workspacesNamespace, kubesawNamespace)
 	if err != nil {
 		return nil, nil, err
