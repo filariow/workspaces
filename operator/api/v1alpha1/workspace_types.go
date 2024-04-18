@@ -30,6 +30,7 @@ const (
 const (
 	LabelHomeWorkspace  string = "workspaces.io/home-workspace"
 	LabelWorkspaceOwner string = "workspaces.io/owner"
+	LabelWorkspaceName  string = "workspaces.io/name"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!

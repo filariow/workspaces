@@ -82,6 +82,30 @@ vet-moc-mockk:
 fmt:
 	$(GO) fmt ./...
 
+E2E_KUBECONFIG ?= /tmp/workspaces-e2e
+E2E_CLUSTERNAME ?= workspaces-e2e
+E2E_CLUSTER_PROVIDER ?= kwokctl
+
+.PHONY: test-e2e-create-cluster
+test-e2e-create-cluster:
+	KUBECONFIG=$(E2E_KUBECONFIG) $(E2E_CLUSTER_PROVIDER) create cluster --name workspaces-e2e
+
+.PHONY: test-e2e-delete-cluster
+test-e2e-delete-cluster:
+	KUBECONFIG=$(E2E_KUBECONFIG) $(E2E_CLUSTER_PROVIDER) delete cluster --name workspaces-e2e
+
+.PHONY: test-e2e-prepare
+test-e2e-prepare:
+	$(MAKE) -C ../operator manifests
+	KUBECONFIG=$(E2E_KUBECONFIG) $(MAKE) install
+	KUBECONFIG=$(E2E_KUBECONFIG) kubectl apply\
+		-f ../operator/config/crd/bases/workspaces.io_workspaces.yaml\
+		-f https://raw.githubusercontent.com/codeready-toolchain/host-operator/master/config/crd/bases/toolchain.dev.openshift.com_spacebindings.yaml
+
+.PHONY: test-e2e
+test-e2e: test-e2e-prepare
+	KUBECONFIG=$(E2E_KUBECONFIG) $(GO) test ./test/e2e/...
+
 .PHONY: test
 test: generate-mock
 	$(GO) test ./...
@@ -93,6 +117,10 @@ test-with-coverage: generate-mock
 .PHONY: docker-build
 docker-build:
 	docker build -t ${IMG} -f Dockerfile ..
+
+.PHONY: install
+install: kustomize
+	$(KUSTOMIZE) build ./config/crd | $(KUBECLI) apply -f -
 
 .PHONY: deploy
 deploy: kustomize yq

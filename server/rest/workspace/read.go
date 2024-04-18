@@ -80,11 +80,11 @@ func (h *ReadWorkspaceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	l.Debug("executing create query", "query", q)
 	qr, err := h.QueryHandler(r.Context(), *q)
 	if err != nil {
-		l.Error("error executing read query", "error", err)
 		switch {
 		case errors.Is(err, core.ErrNotFound):
 			w.WriteHeader(http.StatusNotFound)
 		default:
+			l.Error("error executing read query", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
