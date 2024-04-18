@@ -27,6 +27,7 @@ func main() {
 func run() error {
 	l := slog.Default()
 
+	l.Info("test ci")
 	// fetch configuration
 	wns, ok := os.LookupEnv("WORKSPACES_NAMESPACE")
 	if !ok {
