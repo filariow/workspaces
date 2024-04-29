@@ -1,4 +1,4 @@
-package kube
+package internal
 
 import (
 	"context"
@@ -11,12 +11,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 
+	"github.com/konflux-workspaces/workspaces/server/persistence/kube/constant"
+
 	toolchainv1alpha1 "github.com/codeready-toolchain/api/api/v1alpha1"
 	workspacesv1alpha1 "github.com/konflux-workspaces/workspaces/operator/api/v1alpha1"
-)
-
-const (
-	LabelWorkspaceVisibility string = "workspaces.io/visibility"
 )
 
 // NewCache creates a controller-runtime cache.Cache instance configured to monitor
@@ -60,7 +58,7 @@ func NewCache(ctx context.Context, cfg *rest.Config, workspacesNamespace, kubesa
 				if ws.Labels == nil {
 					ws.Labels = map[string]string{}
 				}
-				ws.Labels[LabelWorkspaceVisibility] = string(ws.Spec.Visibility)
+				ws.Labels[constant.LabelWorkspaceVisibility] = string(ws.Spec.Visibility)
 				return ws, nil
 			}
 

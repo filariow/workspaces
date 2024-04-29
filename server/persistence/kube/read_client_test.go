@@ -19,6 +19,7 @@ import (
 	workspacesv1alpha1 "github.com/konflux-workspaces/workspaces/operator/api/v1alpha1"
 
 	"github.com/konflux-workspaces/workspaces/server/persistence/kube"
+	"github.com/konflux-workspaces/workspaces/server/persistence/kube/constant"
 )
 
 var _ = Describe("ReadClient", func() {
@@ -410,7 +411,7 @@ var _ = Describe("ReadClient", func() {
 						Namespace: wsns,
 						Labels: map[string]string{
 							workspacesv1alpha1.LabelWorkspaceOwner: "owner-user",
-							kube.LabelWorkspaceVisibility:          string(workspacesv1alpha1.InternalWorkspaceVisibilityCommunity),
+							constant.LabelWorkspaceVisibility:      string(workspacesv1alpha1.InternalWorkspaceVisibilityCommunity),
 						},
 					},
 					Spec: workspacesv1alpha1.InternalWorkspaceSpec{
@@ -459,7 +460,7 @@ var _ = Describe("ReadClient", func() {
 		})
 
 		When("label selection is set to retrieve only private workspaces", func() {
-			r, err := labels.NewRequirement(kube.LabelWorkspaceVisibility, selection.In, []string{string(workspacesv1alpha1.InternalWorkspaceVisibilityPrivate)})
+			r, err := labels.NewRequirement(constant.LabelWorkspaceVisibility, selection.In, []string{string(workspacesv1alpha1.InternalWorkspaceVisibilityPrivate)})
 			Expect(err).NotTo(HaveOccurred())
 			ls := labels.NewSelector().Add(*r)
 
@@ -477,7 +478,7 @@ var _ = Describe("ReadClient", func() {
 		})
 
 		When("label selection is set to retrieve only community workspaces", func() {
-			r, err := labels.NewRequirement(kube.LabelWorkspaceVisibility, selection.In, []string{string(workspacesv1alpha1.InternalWorkspaceVisibilityCommunity)})
+			r, err := labels.NewRequirement(constant.LabelWorkspaceVisibility, selection.In, []string{string(workspacesv1alpha1.InternalWorkspaceVisibilityCommunity)})
 			Expect(err).NotTo(HaveOccurred())
 			ls := labels.NewSelector().Add(*r)
 

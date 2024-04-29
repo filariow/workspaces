@@ -16,6 +16,8 @@ import (
 	workspacesv1alpha1 "github.com/konflux-workspaces/workspaces/operator/api/v1alpha1"
 
 	"github.com/konflux-workspaces/workspaces/server/core/workspace"
+	"github.com/konflux-workspaces/workspaces/server/persistence/kube/constant"
+	"github.com/konflux-workspaces/workspaces/server/persistence/kube/internal"
 	"github.com/konflux-workspaces/workspaces/server/workspacesutil"
 )
 
@@ -35,7 +37,7 @@ type ReadClient struct {
 
 // NewReadClientWithCache creates a controller-runtime cache and use it as KubeReadClient's backend.
 func NewReadClientWithCache(ctx context.Context, cfg *rest.Config, workspacesNamespace, kubesawNamespace string) (*ReadClient, cache.Cache, error) {
-	c, err := NewCache(ctx, cfg, workspacesNamespace, kubesawNamespace)
+	c, err := internal.NewCache(ctx, cfg, workspacesNamespace, kubesawNamespace)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -157,7 +159,7 @@ func (c *ReadClient) listUserSpaceBindings(
 }
 
 func (c *ReadClient) listCommunityWorkspaces(ctx context.Context, workspaces *workspacesv1alpha1.InternalWorkspaceList) error {
-	r, err := labels.NewRequirement(LabelWorkspaceVisibility, selection.Equals, []string{string(workspacesv1alpha1.InternalWorkspaceVisibilityCommunity)})
+	r, err := labels.NewRequirement(constant.LabelWorkspaceVisibility, selection.Equals, []string{string(workspacesv1alpha1.InternalWorkspaceVisibilityCommunity)})
 	if err != nil {
 		return err
 	}
