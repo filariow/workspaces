@@ -1,13 +1,12 @@
 module github.com/konflux-workspaces/workspaces/e2e
 
-go 1.22
-toolchain go1.22.2
+go 1.22.2
 
 require (
 	github.com/codeready-toolchain/api v0.0.0-20240209161348-1e69b9614bd8
 	github.com/cucumber/godog v0.14.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
-	github.com/konflux-workspaces/workspaces/operator v0.0.0-00010101000000-000000000000
+	github.com/konflux-workspaces/workspaces/operator v0.0.0-20240506162712-f92a61bb011a
 	github.com/spf13/pflag v1.0.5
 	k8s.io/api v0.30.0
 	k8s.io/apimachinery v0.30.0

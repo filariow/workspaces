@@ -6,6 +6,10 @@ ARG TARGETARCH
 WORKDIR /workspace
 
 # Copy the Go Modules manifests
+COPY go.work go.work
+COPY go.work.sum go.work.sum
+COPY e2e/go.mod e2e/go.mod
+COPY e2e/go.sum e2e/go.sum
 COPY server/go.mod server/go.mod
 COPY server/go.sum server/go.sum
 COPY operator/ operator/
