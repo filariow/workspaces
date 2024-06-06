@@ -18,7 +18,6 @@ package controller
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -62,7 +61,7 @@ var (
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
 func (r *WorkspaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	l := log.FromContext(ctx)
+	l := log.FromContext(ctx).WithValues("request", req)
 
 	w := workspacescomv1alpha1.InternalWorkspace{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &w); err != nil {
@@ -70,12 +69,11 @@ func (r *WorkspaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if err := r.ensureWorkspaceVisibilityIsSatisfied(ctx, w); err != nil {
-		if errors.Is(err, ErrNonTransient) {
-			l.Error(err, "non transient error ensuring workspace visibility is satisfied")
-			return ctrl.Result{}, nil
-		}
+		l.Error(err, "error ensuring InternalWorkspace Visibility is satisfied")
 		return ctrl.Result{}, err
 	}
+
+	l.V(6).Info("InternalWorkspace's visibility is satisfied", "visibility", w.Spec.Visibility)
 	return ctrl.Result{}, nil
 }
 

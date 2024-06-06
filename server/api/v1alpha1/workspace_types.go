@@ -23,42 +23,66 @@ import (
 type WorkspaceVisibility string
 
 const (
+	// WorkspaceVisibilityCommunity Community value for Workspaces visibility
 	WorkspaceVisibilityCommunity WorkspaceVisibility = "community"
-	WorkspaceVisibilityPrivate   WorkspaceVisibility = "private"
+	// WorkspaceVisibilityPrivate Private value for Workspaces visibility
+	WorkspaceVisibilityPrivate WorkspaceVisibility = "private"
 )
 
-const (
-	LabelHomeWorkspace  string = "workspaces.io/home-workspace"
-	LabelWorkspaceOwner string = "workspaces.io/owner"
-)
+// UserInfo contains information about a user identity
+type UserInfo struct {
+	JwtInfo JwtInfo `json:"jwtInfo"`
+}
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// JwtInfo contains information extracted from the user JWT Token
+type JwtInfo struct {
+	//+required
+	Email string `json:"email"`
+	//+required
+	UserId string `json:"userId"`
+	//+required
+	Sub string `json:"sub"`
 
-type Owner struct {
-	// +required
-	// Name string `json:"name"`
-
-	// +required
-	Id string `json:"id"`
+	//+optional
+	PreferredUsername string `json:"preferredUsername,omitempty"`
+	//+optional
+	AccountId string `json:"accountId,omitempty"`
+	//+optional
+	Company string `json:"company,omitempty"`
+	//+optional
+	GivenName string `json:"giveName,omitempty"`
+	//+optional
+	FamilyName string `json:"familyName,omitempty"`
 }
 
 // WorkspaceSpec defines the desired state of Workspace
 type WorkspaceSpec struct {
-	// +required
+	//+required
 	Visibility WorkspaceVisibility `json:"visibility"`
-	// +required
-	Owner Owner `json:"owner"`
+
+	//+required
+	Owner UserInfo `json:"owner"`
+}
+
+// SpaceInfo Information about a Space
+type SpaceInfo struct {
+	//+required
+	Name string `json:"name"`
+	//+required
+	IsHome bool `json:"isHome"`
 }
 
 // WorkspaceStatus defines the observed state of Workspace
 type WorkspaceStatus struct {
-	Space string `json:"space"`
+	//+optional
+	Space *SpaceInfo `json:"space,omitempty"`
+	//+optional
+	Owner *UserInfo `json:"owner,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Visibility",type="string",JSONPath=`.spec.visibility`
+//+kubebuilder:printcolumn:name="Visibility",type="string",JSONPath=`.spec.visibility`
 
 // Workspace is the Schema for the workspaces API
 type Workspace struct {

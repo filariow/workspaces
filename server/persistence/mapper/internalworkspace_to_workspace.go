@@ -41,8 +41,18 @@ func (m *Mapper) InternalWorkspaceToWorkspace(workspace *workspacesv1alpha1.Inte
 		},
 		Spec: restworkspacesv1alpha1.WorkspaceSpec{
 			Visibility: restworkspacesv1alpha1.WorkspaceVisibility(workspace.Spec.Visibility),
-			Owner: restworkspacesv1alpha1.Owner{
-				Id: workspace.Spec.Owner.Id,
+			Owner: restworkspacesv1alpha1.UserInfo{
+				JwtInfo: restworkspacesv1alpha1.JwtInfo{
+					Email:  workspace.Spec.Owner.JwtInfo.Email,
+					UserId: workspace.Spec.Owner.JwtInfo.UserId,
+					Sub:    workspace.Spec.Owner.JwtInfo.Sub,
+
+					AccountId:         workspace.Spec.Owner.JwtInfo.AccountId,
+					PreferredUsername: workspace.Spec.Owner.JwtInfo.PreferredUsername,
+					Company:           workspace.Spec.Owner.JwtInfo.Company,
+					GivenName:         workspace.Spec.Owner.JwtInfo.GivenName,
+					FamilyName:        workspace.Spec.Owner.JwtInfo.FamilyName,
+				},
 			},
 		},
 	}, nil

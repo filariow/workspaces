@@ -18,13 +18,11 @@ package controller
 
 import (
 	"context"
-	"errors"
 
+	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/selection"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -51,24 +49,24 @@ type UserSignupReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
 func (r *UserSignupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	l := log.FromContext(ctx)
+	l := log.FromContext(ctx).WithValues("request", req)
 
 	u := toolchainv1alpha1.UserSignup{}
 	if err := r.Client.Get(ctx, req.NamespacedName, &u); err != nil {
 		if kerrors.IsNotFound(err) {
-			err := r.ensureWorkspaceIsDeleted(ctx, req.Name)
-			if errors.Is(err, ErrNonTransient) {
-				l.Error(err, "can not delete workspace", "user", req.Name)
-				return ctrl.Result{}, nil
-			}
-			return ctrl.Result{}, err
+			l.V(6).Info("UserSignup not found")
+			return ctrl.Result{}, nil
 		}
+		l.Error(err, "error retrieving UserSignup")
 		return ctrl.Result{}, err
 	}
 
 	if err := r.ensureWorkspaceIsPresentForHomeSpace(ctx, u); err != nil {
+		l.Error(err, "error ensuring InternalWorkspace is present for user's HomeSpace")
 		return ctrl.Result{}, err
 	}
+
+	l.V(6).Info("InternalWorkspace is present for user")
 	return ctrl.Result{}, nil
 }
 
@@ -76,20 +74,38 @@ func (r *UserSignupReconciler) ensureWorkspaceIsPresentForHomeSpace(ctx context.
 	w := &workspacesv1alpha1.InternalWorkspace{ObjectMeta: metav1.ObjectMeta{Name: u.Status.HomeSpace, Namespace: r.WorkspacesNamespace}}
 	_, err := controllerutil.CreateOrUpdate(ctx, r.Client, w, func() error {
 		log.FromContext(ctx).Info("creating/updating workspace", "workspace", w)
-		ll := w.GetLabels()
-		if ll == nil {
-			ll = map[string]string{}
-		}
-		ll[workspacesv1alpha1.LabelHomeWorkspace] = u.Name
-		ll[workspacesv1alpha1.LabelWorkspaceOwner] = u.Name
-		ll[workspacesv1alpha1.LabelDisplayName] = "default"
-		w.Labels = ll
 
+		w.Spec.DisplayName = "default"
 		w.Spec.Visibility = workspacesv1alpha1.InternalWorkspaceVisibilityPrivate
-		w.Spec.Owner = workspacesv1alpha1.Owner{
-			Id: u.Name,
+		w.Spec.Owner = workspacesv1alpha1.UserInfo{
+			JwtInfo: workspacesv1alpha1.JwtInfo{
+				Sub:               u.Spec.IdentityClaims.Sub,
+				Email:             u.Spec.IdentityClaims.Email,
+				UserId:            u.Spec.IdentityClaims.UserID,
+				PreferredUsername: u.Spec.IdentityClaims.PreferredUsername,
+				AccountId:         u.Spec.IdentityClaims.AccountID,
+				Company:           u.Spec.IdentityClaims.Company,
+				GivenName:         u.Spec.IdentityClaims.GivenName,
+				FamilyName:        u.Spec.IdentityClaims.FamilyName,
+			},
+			Identity: workspacesv1alpha1.IdentityInfo{
+				UserSignupRef: &workspacesv1alpha1.UserSignupRef{
+					ObjectReference: corev1.ObjectReference{
+						APIVersion: u.APIVersion,
+						Kind:       u.Kind,
+						Name:       u.Name,
+						Namespace:  u.Namespace,
+						UID:        u.UID,
+					},
+				},
+			},
 		}
-		return nil
+		w.Status.Space = &workspacesv1alpha1.SpaceInfo{
+			IsHome: true,
+			Name:   u.Status.HomeSpace,
+		}
+
+		return controllerutil.SetOwnerReference(&u, w, r.Scheme)
 	})
 	if err != nil {
 		log.FromContext(ctx).Error(err, "error creating or updating workspace", "workspace", w)
@@ -98,32 +114,12 @@ func (r *UserSignupReconciler) ensureWorkspaceIsPresentForHomeSpace(ctx context.
 	return err
 }
 
-func (r *UserSignupReconciler) ensureWorkspaceIsDeleted(ctx context.Context, name string) error {
-	lr, err := labels.NewRequirement(workspacesv1alpha1.LabelHomeWorkspace, selection.Equals, []string{name})
-	if err != nil {
-		return errors.Join(ErrNonTransient, err)
-	}
-	ls := labels.NewSelector()
-	ls.Add(*lr)
-
-	w := workspacesv1alpha1.InternalWorkspace{}
-	if err := r.DeleteAllOf(ctx, &w, &client.DeleteAllOfOptions{
-		ListOptions: client.ListOptions{
-			LabelSelector: ls,
-			Namespace:     r.WorkspacesNamespace,
-		},
-	}); err != nil {
-		return client.IgnoreNotFound(err)
-	}
-	return nil
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *UserSignupReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&toolchainv1alpha1.UserSignup{}, builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
-			u := object.(*toolchainv1alpha1.UserSignup)
-			return u.Status.HomeSpace != ""
+			u, ok := object.(*toolchainv1alpha1.UserSignup)
+			return ok && u.Status.HomeSpace != ""
 		}))).
 		Complete(r)
 }

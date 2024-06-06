@@ -17,60 +17,111 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type InternalWorkspaceVisibility string
 
 const (
+	// DisplayNameDefaultWorkspace display name for the default Workspace
 	DisplayNameDefaultWorkspace string = "default"
 
+	// InternalWorkspaceVisibilityCommunity Community value for InternalWorkspaces visibility
 	InternalWorkspaceVisibilityCommunity InternalWorkspaceVisibility = "community"
-	InternalWorkspaceVisibilityPrivate   InternalWorkspaceVisibility = "private"
+	// InternalWorkspaceVisibilityPrivate Private value for InternalWorkspaces visibility
+	InternalWorkspaceVisibilityPrivate InternalWorkspaceVisibility = "private"
 
+	// LabelInternalDomain domain for internal labels
 	LabelInternalDomain string = "internal.workspaces.konflux.io/"
-	LabelHomeWorkspace  string = LabelInternalDomain + "home-workspace"
+	// LabelDisplayName label for storing the user chosen display-name for the workspace
+	LabelDisplayName string = LabelInternalDomain + "display-name"
+	// LabelWorkspaceOwner owner label
+	// Deprecated: use field
 	LabelWorkspaceOwner string = LabelInternalDomain + "owner"
-	LabelDisplayName    string = LabelInternalDomain + "display-name"
 
+	// PublicViewerName the name of the KubeSaw's PublicViewer user
 	PublicViewerName string = "kubesaw-authenticated"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+// UserInfo contains information about a user identity
+type UserInfo struct {
+	//+required
+	JwtInfo JwtInfo `json:"jwtInfo"`
 
-type Owner struct {
-	// +required
-	// Name string `json:"name"`
+	//+required
+	Identity IdentityInfo `json:"identity"`
+}
 
-	// +required
-	Id string `json:"id"`
+// +kubebuilder:validation:MaxProperties:=1
+// IdentityInfo decouples integration with an identity management system
+type IdentityInfo struct {
+	//+optional
+	UserSignupRef *UserSignupRef `json:"userSignupRef,omitempty"`
+}
+
+// UserSignupRef reference to an UserSignup
+type UserSignupRef struct {
+	corev1.ObjectReference `json:",inline"`
+}
+
+// JwtInfo contains information extracted from the user JWT Token
+type JwtInfo struct {
+	//+required
+	Email string `json:"email"`
+	//+required
+	UserId string `json:"userId"`
+	//+required
+	Sub string `json:"sub"`
+
+	//+optional
+	PreferredUsername string `json:"preferredUsername,omitempty"`
+	//+optional
+	AccountId string `json:"accountId,omitempty"`
+	//+optional
+	Company string `json:"company,omitempty"`
+	//+optional
+	GivenName string `json:"giveName,omitempty"`
+	//+optional
+	FamilyName string `json:"familyName,omitempty"`
 }
 
 // InternalWorkspaceSpec defines the desired state of Workspace
 type InternalWorkspaceSpec struct {
-	// +required
+	//+DisplayName
+	DisplayName string `json:"displayName"`
+	//+required
 	Visibility InternalWorkspaceVisibility `json:"visibility"`
-	// +required
-	Owner Owner `json:"owner"`
+	//+required
+	Owner UserInfo `json:"owner"`
 }
 
-// WorkspaceStatus defines the observed state of Workspace
-type WorkspaceStatus struct {
-	Space string `json:"space"`
+// SpaceInfo Information about a Space
+type SpaceInfo struct {
+	//+required
+	Name string `json:"name"`
+	//+required
+	IsHome bool `json:"isHome"`
+}
+
+// InternalWorkspaceStatus defines the observed state of Workspace
+type InternalWorkspaceStatus struct {
+	// Space contains information about the underlying Space
+	//+optional
+	Space *SpaceInfo `json:"space,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Visibility",type="string",JSONPath=`.spec.visibility`
+//+kubebuilder:printcolumn:name="Visibility",type="string",JSONPath=`.spec.visibility`
 
 // InternalWorkspace is the Schema for the workspaces API
 type InternalWorkspace struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   InternalWorkspaceSpec `json:"spec,omitempty"`
-	Status WorkspaceStatus       `json:"status,omitempty"`
+	Spec   InternalWorkspaceSpec   `json:"spec,omitempty"`
+	Status InternalWorkspaceStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
