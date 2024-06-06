@@ -31,7 +31,7 @@ func createUserSignupAndWaitForWorkspace(
 	cli cli.Cli,
 	namespace, name string,
 ) (*toolchainv1alpha1.UserSignup, *workspacesv1alpha1.InternalWorkspace, error) {
-	u, err := user.OnboardUser(ctx, cli, namespace, user.DefaultUserName)
+	u, err := user.OnboardUser(ctx, cli, namespace, name)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
@@ -11,6 +12,7 @@ import (
 	tcontext "github.com/konflux-workspaces/workspaces/e2e/pkg/context"
 	"github.com/konflux-workspaces/workspaces/e2e/step/user"
 
+	toolchainv1alpha1 "github.com/codeready-toolchain/api/api/v1alpha1"
 	workspacesv1alpha1 "github.com/konflux-workspaces/workspaces/operator/api/v1alpha1"
 )
 
@@ -80,6 +82,8 @@ func ownerChangesVisibilityTo(ctx context.Context, visibility workspacesv1alpha1
 }
 
 func createWorkspace(ctx context.Context, cli cli.Cli, namespace, name, user string, visibility workspacesv1alpha1.InternalWorkspaceVisibility) (*workspacesv1alpha1.InternalWorkspace, error) {
+	ksns := tcontext.RetrieveKubespaceNamespace(ctx)
+
 	w := workspacesv1alpha1.InternalWorkspace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -87,7 +91,23 @@ func createWorkspace(ctx context.Context, cli cli.Cli, namespace, name, user str
 		},
 		Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 			Visibility: visibility,
-			Owner:      workspacesv1alpha1.Owner{Id: user},
+			Owner: workspacesv1alpha1.UserInfo{
+				JwtInfo: workspacesv1alpha1.JwtInfo{
+					Sub:               user,
+					Email:             user,
+					PreferredUsername: user,
+				},
+				Identity: workspacesv1alpha1.IdentityInfo{
+					UserSignupRef: &workspacesv1alpha1.UserSignupRef{
+						ObjectReference: corev1.ObjectReference{
+							Kind:       "UserSignup",
+							APIVersion: toolchainv1alpha1.GroupVersion.String(),
+							Namespace:  ksns,
+							Name:       user,
+						},
+					},
+				},
+			},
 		},
 	}
 
