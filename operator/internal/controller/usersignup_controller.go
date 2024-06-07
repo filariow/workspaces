@@ -18,6 +18,8 @@ package controller
 
 import (
 	"context"
+	"errors"
+	"slices"
 
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -55,6 +57,13 @@ func (r *UserSignupReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	if err := r.Client.Get(ctx, req.NamespacedName, &u); err != nil {
 		if kerrors.IsNotFound(err) {
 			l.V(6).Info("UserSignup not found")
+			if err := r.ensureWorkspaceIsDeleted(ctx, req.Name); err != nil {
+				if errors.Is(err, ErrNonTransient) {
+					l.Error(err, "can not delete workspace", "user", req.Name)
+					return ctrl.Result{}, nil
+				}
+				return ctrl.Result{}, err
+			}
 			return ctrl.Result{}, nil
 		}
 		l.Error(err, "error retrieving UserSignup")
@@ -71,7 +80,12 @@ func (r *UserSignupReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 }
 
 func (r *UserSignupReconciler) ensureWorkspaceIsPresentForHomeSpace(ctx context.Context, u toolchainv1alpha1.UserSignup) error {
-	w := &workspacesv1alpha1.InternalWorkspace{ObjectMeta: metav1.ObjectMeta{Name: u.Status.HomeSpace, Namespace: r.WorkspacesNamespace}}
+	w := &workspacesv1alpha1.InternalWorkspace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      u.Status.HomeSpace,
+			Namespace: r.WorkspacesNamespace,
+		},
+	}
 	_, err := controllerutil.CreateOrUpdate(ctx, r.Client, w, func() error {
 		log.FromContext(ctx).Info("creating/updating workspace", "workspace", w)
 
@@ -105,13 +119,33 @@ func (r *UserSignupReconciler) ensureWorkspaceIsPresentForHomeSpace(ctx context.
 			Name:   u.Status.HomeSpace,
 		}
 
-		return controllerutil.SetOwnerReference(&u, w, r.Scheme)
+		return nil
 	})
 	if err != nil {
 		log.FromContext(ctx).Error(err, "error creating or updating workspace", "workspace", w)
 	}
 
 	return err
+}
+
+func (r *UserSignupReconciler) ensureWorkspaceIsDeleted(ctx context.Context, name string) error {
+	// retrieve all InternalWorkspaces
+	ww := workspacesv1alpha1.InternalWorkspaceList{}
+	if err := r.List(ctx, &ww); err != nil {
+		return err
+	}
+
+	// look for user's home InternalWorkspace
+	i := -1
+	if i = slices.IndexFunc(ww.Items, func(w workspacesv1alpha1.InternalWorkspace) bool {
+		return w.Status.Space.IsHome && w.Spec.Owner.Identity.UserSignupRef.Name == name
+	}); i == -1 {
+		// workspace not found, nothing to delete
+		return nil
+	}
+
+	// delete the user's Home InternalWorkspace
+	return r.Delete(ctx, &ww.Items[i])
 }
 
 // SetupWithManager sets up the controller with the Manager.

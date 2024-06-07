@@ -2,11 +2,11 @@ package iwclient_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -50,7 +50,7 @@ var _ = Describe("Read", func() {
 
 			// then
 			Expect(err).To(HaveOccurred())
-			Expect(errors.Is(err, iwclient.ErrWorkspaceNotFound)).To(BeTrue())
+			Expect(err).To(MatchError(iwclient.ErrWorkspaceNotFound))
 		})
 	})
 
@@ -87,7 +87,7 @@ var _ = Describe("Read", func() {
 
 			// then
 			Expect(err).To(HaveOccurred())
-			Expect(errors.Is(err, iwclient.ErrWorkspaceNotFound)).To(BeTrue())
+			Expect(err).To(MatchError(iwclient.ErrWorkspaceNotFound))
 		})
 	})
 
@@ -96,9 +96,18 @@ var _ = Describe("Read", func() {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      generateName("owner-ws"),
 				Namespace: wsns,
-				Labels: map[string]string{
-					workspacesv1alpha1.LabelDisplayName:    "owner-ws",
-					workspacesv1alpha1.LabelWorkspaceOwner: "owner-user",
+			},
+			Spec: workspacesv1alpha1.InternalWorkspaceSpec{
+				DisplayName: "owner-ws",
+				Owner: workspacesv1alpha1.UserInfo{
+					Identity: workspacesv1alpha1.IdentityInfo{
+						UserSignupRef: &workspacesv1alpha1.UserSignupRef{
+							ObjectReference: corev1.ObjectReference{
+								Namespace: ksns,
+								Name:      "owner-user",
+							},
+						},
+					},
 				},
 			},
 		}
@@ -121,6 +130,15 @@ var _ = Describe("Read", func() {
 						Space:            w.Name,
 					},
 				},
+				&toolchainv1alpha1.UserSignup{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "owner-us",
+						Namespace: ksns,
+					},
+					Status: toolchainv1alpha1.UserSignupStatus{
+						CompliantUsername: "owner-user",
+					},
+				},
 			)
 		})
 
@@ -129,9 +147,9 @@ var _ = Describe("Read", func() {
 			var rw workspacesv1alpha1.InternalWorkspace
 			key := iwclient.SpaceKey{Owner: "owner-user", Name: "owner-ws"}
 			err := c.GetAsUser(ctx, "owner-user", key, &rw)
-			Expect(err).NotTo(HaveOccurred())
 
 			// then
+			Expect(err).NotTo(HaveOccurred())
 			Expect(*w).To(Equal(rw))
 		})
 
@@ -143,7 +161,7 @@ var _ = Describe("Read", func() {
 
 			// then
 			Expect(err).To(HaveOccurred())
-			Expect(errors.Is(err, iwclient.ErrUnauthorized)).To(BeTrue())
+			Expect(err).To(MatchError(iwclient.ErrUnauthorized))
 			Expect(rw).To(BeZero())
 		})
 	})
@@ -218,7 +236,7 @@ var _ = Describe("Read", func() {
 
 				// then
 				Expect(err).To(HaveOccurred())
-				Expect(errors.Is(err, iwclient.ErrUnauthorized)).To(BeTrue())
+				Expect(err).To(MatchError(iwclient.ErrUnauthorized))
 				Expect(rw).To(BeZero())
 			}
 		})
@@ -270,6 +288,15 @@ var _ = Describe("Read", func() {
 						MasterUserRecord: "other-user",
 						SpaceRole:        "viewer",
 						Space:            wName,
+					},
+				},
+				&toolchainv1alpha1.UserSignup{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      "owner-user",
+						Namespace: ksns,
+					},
+					Status: toolchainv1alpha1.UserSignupStatus{
+						CompliantUsername: "owner-user",
 					},
 				},
 			)
