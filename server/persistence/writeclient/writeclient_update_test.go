@@ -131,8 +131,17 @@ var _ = Describe("WriteclientUpdate", func() {
 						MasterUserRecord: user,
 					},
 				}
+				userSignup := toolchainv1alpha1.UserSignup{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      workspace.Namespace,
+						Namespace: kubesawNamespace,
+					},
+					Status: toolchainv1alpha1.UserSignupStatus{
+						CompliantUsername: workspace.Namespace,
+					},
+				}
 
-				beforeInitializeCli(&internalWorkspace, &workspace, &spaceBinding)
+				beforeInitializeCli(&internalWorkspace, &workspace, &spaceBinding, &userSignup)
 			})
 
 			It("should update if the user is the owner", func() {

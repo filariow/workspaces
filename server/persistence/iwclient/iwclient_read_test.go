@@ -132,11 +132,11 @@ var _ = Describe("Read", func() {
 				},
 				&toolchainv1alpha1.UserSignup{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      "owner-us",
+						Name:      w.Spec.Owner.Identity.UserSignupRef.Name,
 						Namespace: ksns,
 					},
 					Status: toolchainv1alpha1.UserSignupStatus{
-						CompliantUsername: "owner-user",
+						CompliantUsername: w.Spec.Owner.Identity.UserSignupRef.Name,
 					},
 				},
 			)
@@ -169,6 +169,8 @@ var _ = Describe("Read", func() {
 	When("more than one valid workspace exist", func() {
 		ww := make([]*workspacesv1alpha1.InternalWorkspace, 10)
 		sbs := make([]*toolchainv1alpha1.SpaceBinding, len(ww))
+		uu := make([]*toolchainv1alpha1.UserSignup, len(ww))
+
 		for i := 0; i < len(ww); i++ {
 			wName := fmt.Sprintf("owner-ws-%d", i)
 			ww[i] = &workspacesv1alpha1.InternalWorkspace{
@@ -196,14 +198,27 @@ var _ = Describe("Read", func() {
 					Space:            ww[i].GetName(),
 				},
 			}
+
+			uu[i] = &toolchainv1alpha1.UserSignup{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      ww[i].Spec.Owner.Identity.UserSignupRef.Name,
+					Namespace: ksns,
+				},
+				Status: toolchainv1alpha1.UserSignupStatus{
+					CompliantUsername: ww[i].Spec.Owner.Identity.UserSignupRef.Name,
+				},
+			}
 		}
 
-		ee := make([]client.Object, len(ww)+len(sbs))
+		ee := make([]client.Object, len(ww)+len(sbs)+len(uu))
 		for i, w := range ww {
 			ee[i] = w
 		}
 		for i, sb := range sbs {
 			ee[10+i] = sb
+		}
+		for i, u := range uu {
+			ee[20+i] = u
 		}
 
 		BeforeEach(func() {
@@ -324,11 +339,21 @@ var _ = Describe("Read", func() {
 				Labels: map[string]string{
 					workspacesv1alpha1.LabelWorkspaceOwner: "owner-user",
 					icache.LabelWorkspaceVisibility:        string(workspacesv1alpha1.InternalWorkspaceVisibilityCommunity),
-					workspacesv1alpha1.LabelDisplayName:    wName,
 				},
 			},
 			Spec: workspacesv1alpha1.InternalWorkspaceSpec{
-				Visibility: workspacesv1alpha1.InternalWorkspaceVisibilityCommunity,
+				Visibility:  workspacesv1alpha1.InternalWorkspaceVisibilityCommunity,
+				DisplayName: wName,
+				Owner: workspacesv1alpha1.UserInfo{
+					Identity: workspacesv1alpha1.IdentityInfo{
+						UserSignupRef: &workspacesv1alpha1.UserSignupRef{
+							ObjectReference: corev1.ObjectReference{
+								Name:      "owner-user",
+								Namespace: ksns,
+							},
+						},
+					},
+				},
 			},
 		}
 
@@ -348,6 +373,15 @@ var _ = Describe("Read", func() {
 						MasterUserRecord: "owner-user",
 						SpaceRole:        "admin",
 						Space:            expectedWorkspace.GetName(),
+					},
+				},
+				&toolchainv1alpha1.UserSignup{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      expectedWorkspace.Spec.Owner.Identity.UserSignupRef.Name,
+						Namespace: ksns,
+					},
+					Status: toolchainv1alpha1.UserSignupStatus{
+						CompliantUsername: expectedWorkspace.Spec.Owner.Identity.UserSignupRef.Name,
 					},
 				},
 			)
