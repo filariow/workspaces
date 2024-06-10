@@ -12,14 +12,12 @@ import (
 // WorkspaceToInternalWorkspace builds an InternalWorkspace starting from a Workspace.
 // IMPORTANT: The Name and Namespace fields are left empty.
 func (m *Mapper) WorkspaceToInternalWorkspace(workspace *restworkspacesv1alpha1.Workspace) (*workspacesv1alpha1.InternalWorkspace, error) {
-	ll := map[string]string{}
+	ll := map[string]string{workspacesv1alpha1.LabelDisplayName: workspace.GetName()}
 	for k, v := range workspace.GetLabels() {
 		if !strings.HasPrefix(k, workspacesv1alpha1.LabelInternalDomain) {
 			ll[k] = v
 		}
 	}
-	ll[workspacesv1alpha1.LabelDisplayName] = workspace.GetName()
-	ll[workspacesv1alpha1.LabelWorkspaceOwner] = workspace.GetNamespace()
 
 	return &workspacesv1alpha1.InternalWorkspace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -27,7 +25,8 @@ func (m *Mapper) WorkspaceToInternalWorkspace(workspace *restworkspacesv1alpha1.
 			Generation: workspace.Generation,
 		},
 		Spec: workspacesv1alpha1.InternalWorkspaceSpec{
-			Visibility: workspacesv1alpha1.InternalWorkspaceVisibility(workspace.Spec.Visibility),
+			DisplayName: workspace.Name,
+			Visibility:  workspacesv1alpha1.InternalWorkspaceVisibility(workspace.Spec.Visibility),
 			Owner: workspacesv1alpha1.UserInfo{
 				JwtInfo: workspacesv1alpha1.JwtInfo{
 					Email:  workspace.Spec.Owner.JwtInfo.Email,
@@ -40,6 +39,14 @@ func (m *Mapper) WorkspaceToInternalWorkspace(workspace *restworkspacesv1alpha1.
 					GivenName:         workspace.Spec.Owner.JwtInfo.GivenName,
 					FamilyName:        workspace.Spec.Owner.JwtInfo.FamilyName,
 				},
+			},
+		},
+		Status: workspacesv1alpha1.InternalWorkspaceStatus{
+			Space: &workspacesv1alpha1.SpaceInfo{
+				Name: workspace.Status.Space.Name,
+			},
+			Owner: workspacesv1alpha1.UserInfoStatus{
+				Username: workspace.Namespace,
 			},
 		},
 	}, nil

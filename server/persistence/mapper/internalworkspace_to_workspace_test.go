@@ -28,6 +28,10 @@ var _ = Describe("InternalworkspaceToWorkspace", func() {
 			Expect(w.GetLabels()).NotTo(HaveKey(workspacesv1alpha1.LabelInternalDomain + "not-expected-label"))
 			Expect(w.Generation).To(Equal(int64(1)))
 			Expect(w.Spec).ToNot(BeNil())
+			Expect(w.Status).ToNot(BeNil())
+			Expect(w.Status.Space).ToNot(BeNil())
+			Expect(w.Status.Space.Name).To(Equal("space"))
+			Expect(w.Status.Space.IsHome).To(Equal(true))
 		}
 
 		BeforeEach(func() {
@@ -37,14 +41,23 @@ var _ = Describe("InternalworkspaceToWorkspace", func() {
 					GenerateName: displayName,
 					Namespace:    workspacesNamespace,
 					Labels: map[string]string{
-						workspacesv1alpha1.LabelDisplayName:                           displayName,
-						workspacesv1alpha1.LabelWorkspaceOwner:                        ownerName,
-						"expected-label":                                              "not-empty",
+						"expected-label": "not-empty",
 						workspacesv1alpha1.LabelInternalDomain + "not-expected-label": "not-empty",
 					},
 					Generation: 1,
 				},
-				Spec: workspacesv1alpha1.InternalWorkspaceSpec{},
+				Spec: workspacesv1alpha1.InternalWorkspaceSpec{
+					DisplayName: displayName,
+				},
+				Status: workspacesv1alpha1.InternalWorkspaceStatus{
+					Owner: workspacesv1alpha1.UserInfoStatus{
+						Username: ownerName,
+					},
+					Space: &workspacesv1alpha1.SpaceInfo{
+						Name:   "space",
+						IsHome: true,
+					},
+				},
 			}
 		})
 
@@ -78,68 +91,6 @@ var _ = Describe("InternalworkspaceToWorkspace", func() {
 				validateWorkspace(w)
 				Expect(w.Spec.Visibility).To(Equal(restworkspacesv1alpha1.WorkspaceVisibilityPrivate))
 			})
-		})
-	})
-
-	When("a InternalWorkspace is missing internal owner name label", func() {
-		var internalWorkspace workspacesv1alpha1.InternalWorkspace
-		workspacesNamespace := "foo"
-		displayName := "bar"
-
-		BeforeEach(func() {
-			// given
-			internalWorkspace = workspacesv1alpha1.InternalWorkspace{
-				ObjectMeta: metav1.ObjectMeta{
-					GenerateName: displayName,
-					Namespace:    workspacesNamespace,
-					Labels: map[string]string{
-						workspacesv1alpha1.LabelDisplayName: displayName,
-					},
-				},
-				Spec: workspacesv1alpha1.InternalWorkspaceSpec{
-					Visibility: workspacesv1alpha1.InternalWorkspaceVisibilityCommunity,
-				},
-			}
-		})
-
-		It("returns an error", func() {
-			// when
-			w, err := mapper.Default.InternalWorkspaceToWorkspace(&internalWorkspace)
-
-			// then
-			Expect(err).To(HaveOccurred())
-			Expect(w).To(BeNil())
-		})
-	})
-
-	When("a InternalWorkspace is missing internal display name label", func() {
-		var internalWorkspace workspacesv1alpha1.InternalWorkspace
-		workspacesNamespace := "foo"
-		ownerName := "baz"
-
-		BeforeEach(func() {
-			// given
-			internalWorkspace = workspacesv1alpha1.InternalWorkspace{
-				ObjectMeta: metav1.ObjectMeta{
-					GenerateName: "foo",
-					Namespace:    workspacesNamespace,
-					Labels: map[string]string{
-						workspacesv1alpha1.LabelWorkspaceOwner: ownerName,
-					},
-				},
-				Spec: workspacesv1alpha1.InternalWorkspaceSpec{
-					Visibility: workspacesv1alpha1.InternalWorkspaceVisibilityCommunity,
-				},
-			}
-		})
-
-		It("returns an error", func() {
-			// when
-			w, err := mapper.Default.InternalWorkspaceToWorkspace(&internalWorkspace)
-
-			// then
-			Expect(err).To(HaveOccurred())
-			Expect(w).To(BeNil())
 		})
 	})
 })
