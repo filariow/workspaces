@@ -6,7 +6,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -39,6 +38,11 @@ var _ = Describe("WriteclientUpdate", func() {
 			Name:      "workspace-foo",
 		},
 		Spec: restworkspacesv1alpha1.WorkspaceSpec{},
+		Status: restworkspacesv1alpha1.WorkspaceStatus{
+			Space: &restworkspacesv1alpha1.SpaceInfo{
+				Name: "space",
+			},
+		},
 	}
 
 	BeforeEach(func() {
@@ -82,13 +86,16 @@ var _ = Describe("WriteclientUpdate", func() {
 					Visibility:  workspacesv1alpha1.InternalWorkspaceVisibilityPrivate,
 					DisplayName: workspace.Name,
 					Owner: workspacesv1alpha1.UserInfo{
-						Identity: workspacesv1alpha1.IdentityInfo{
-							UserSignupRef: &workspacesv1alpha1.UserSignupRef{
-								ObjectReference: corev1.ObjectReference{
-									Name: user,
-								},
-							},
-						},
+						JwtInfo: workspacesv1alpha1.JwtInfo{},
+					},
+				},
+				Status: workspacesv1alpha1.InternalWorkspaceStatus{
+					Space: &workspacesv1alpha1.SpaceInfo{
+						Name:   "space",
+						IsHome: true,
+					},
+					Owner: workspacesv1alpha1.UserInfoStatus{
+						Username: user,
 					},
 				},
 			}

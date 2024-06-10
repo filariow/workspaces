@@ -82,7 +82,7 @@ func (c *Client) fetchInternalWorkspaceByLabel(
 	i := 0
 	if i = slices.IndexFunc(ww.Items, func(w workspacesv1alpha1.InternalWorkspace) bool {
 		return w.Spec.DisplayName == space &&
-			w.Spec.Owner.Identity.UserSignupRef.Name == u.Name
+			w.Status.Owner.Username == u.Status.CompliantUsername
 	}); i == -1 {
 		return nil, ErrWorkspaceNotFound
 	}

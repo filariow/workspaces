@@ -6,7 +6,6 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -100,14 +99,16 @@ var _ = Describe("Read", func() {
 			Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 				DisplayName: "owner-ws",
 				Owner: workspacesv1alpha1.UserInfo{
-					Identity: workspacesv1alpha1.IdentityInfo{
-						UserSignupRef: &workspacesv1alpha1.UserSignupRef{
-							ObjectReference: corev1.ObjectReference{
-								Namespace: ksns,
-								Name:      "owner-user",
-							},
-						},
-					},
+					JwtInfo: workspacesv1alpha1.JwtInfo{},
+				},
+			},
+			Status: workspacesv1alpha1.InternalWorkspaceStatus{
+				Owner: workspacesv1alpha1.UserInfoStatus{
+					Username: "owner-user",
+				},
+				Space: &workspacesv1alpha1.SpaceInfo{
+					Name:   "space",
+					IsHome: true,
 				},
 			},
 		}
@@ -132,11 +133,11 @@ var _ = Describe("Read", func() {
 				},
 				&toolchainv1alpha1.UserSignup{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      w.Spec.Owner.Identity.UserSignupRef.Name,
+						Name:      w.Status.Owner.Username,
 						Namespace: ksns,
 					},
 					Status: toolchainv1alpha1.UserSignupStatus{
-						CompliantUsername: w.Spec.Owner.Identity.UserSignupRef.Name,
+						CompliantUsername: w.Status.Owner.Username,
 					},
 				},
 			)
@@ -185,13 +186,12 @@ var _ = Describe("Read", func() {
 					Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 						DisplayName: wName,
 						Owner: workspacesv1alpha1.UserInfo{
-							Identity: workspacesv1alpha1.IdentityInfo{
-								UserSignupRef: &workspacesv1alpha1.UserSignupRef{
-									ObjectReference: corev1.ObjectReference{
-										Name: fmt.Sprintf("owner-user-%d", i),
-									},
-								},
-							},
+							JwtInfo: workspacesv1alpha1.JwtInfo{},
+						},
+					},
+					Status: workspacesv1alpha1.InternalWorkspaceStatus{
+						Owner: workspacesv1alpha1.UserInfoStatus{
+							Username: fmt.Sprintf("owner-user-%d", i),
 						},
 					},
 				}
@@ -212,11 +212,11 @@ var _ = Describe("Read", func() {
 				}
 				uu[i] = &toolchainv1alpha1.UserSignup{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      ww[i].Spec.Owner.Identity.UserSignupRef.Name,
+						Name:      ww[i].Status.Owner.Username,
 						Namespace: ksns,
 					},
 					Status: toolchainv1alpha1.UserSignupStatus{
-						CompliantUsername: ww[i].Spec.Owner.Identity.UserSignupRef.Name,
+						CompliantUsername: ww[i].Status.Owner.Username,
 					},
 				}
 			}
@@ -238,8 +238,8 @@ var _ = Describe("Read", func() {
 			for _, w := range ww {
 				// when
 				var rw workspacesv1alpha1.InternalWorkspace
-				key := iwclient.SpaceKey{Owner: w.Spec.Owner.Identity.UserSignupRef.Name, Name: w.Spec.DisplayName}
-				err := c.GetAsUser(ctx, w.Spec.Owner.Identity.UserSignupRef.Name, key, &rw)
+				key := iwclient.SpaceKey{Owner: w.Status.Owner.Username, Name: w.Spec.DisplayName}
+				err := c.GetAsUser(ctx, w.Status.Owner.Username, key, &rw)
 				Expect(err).NotTo(HaveOccurred())
 
 				// then
@@ -251,7 +251,7 @@ var _ = Describe("Read", func() {
 			for _, w := range ww {
 				// when
 				rw := workspacesv1alpha1.InternalWorkspace{}
-				key := iwclient.SpaceKey{Owner: w.Spec.Owner.Identity.UserSignupRef.Name, Name: w.Spec.DisplayName}
+				key := iwclient.SpaceKey{Owner: w.Status.Owner.Username, Name: w.Spec.DisplayName}
 				err := c.GetAsUser(ctx, "not-owner-user", key, &rw)
 
 				// then
@@ -276,13 +276,16 @@ var _ = Describe("Read", func() {
 				Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 					DisplayName: wName,
 					Owner: workspacesv1alpha1.UserInfo{
-						Identity: workspacesv1alpha1.IdentityInfo{
-							UserSignupRef: &workspacesv1alpha1.UserSignupRef{
-								ObjectReference: corev1.ObjectReference{
-									Name: "owner-user",
-								},
-							},
-						},
+						JwtInfo: workspacesv1alpha1.JwtInfo{},
+					},
+				},
+				Status: workspacesv1alpha1.InternalWorkspaceStatus{
+					Space: &workspacesv1alpha1.SpaceInfo{
+						Name:   "space",
+						IsHome: true,
+					},
+					Owner: workspacesv1alpha1.UserInfoStatus{
+						Username: "owner-user",
 					},
 				},
 			}
@@ -293,12 +296,12 @@ var _ = Describe("Read", func() {
 						Name:      "owner-sb",
 						Namespace: ksns,
 						Labels: map[string]string{
-							toolchainv1alpha1.SpaceBindingMasterUserRecordLabelKey: expectedWorkspace.Spec.Owner.Identity.UserSignupRef.Name,
+							toolchainv1alpha1.SpaceBindingMasterUserRecordLabelKey: expectedWorkspace.Status.Owner.Username,
 							toolchainv1alpha1.SpaceBindingSpaceLabelKey:            expectedWorkspace.GetName(),
 						},
 					},
 					Spec: toolchainv1alpha1.SpaceBindingSpec{
-						MasterUserRecord: expectedWorkspace.Spec.Owner.Identity.UserSignupRef.Name,
+						MasterUserRecord: expectedWorkspace.Status.Owner.Username,
 						SpaceRole:        "admin",
 						Space:            wName,
 					},
@@ -320,11 +323,11 @@ var _ = Describe("Read", func() {
 				},
 				&toolchainv1alpha1.UserSignup{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      expectedWorkspace.Spec.Owner.Identity.UserSignupRef.Name,
+						Name:      expectedWorkspace.Status.Owner.Username,
 						Namespace: ksns,
 					},
 					Status: toolchainv1alpha1.UserSignupStatus{
-						CompliantUsername: expectedWorkspace.Spec.Owner.Identity.UserSignupRef.Name,
+						CompliantUsername: expectedWorkspace.Status.Owner.Username,
 					},
 				},
 			)
@@ -358,14 +361,16 @@ var _ = Describe("Read", func() {
 				Visibility:  workspacesv1alpha1.InternalWorkspaceVisibilityCommunity,
 				DisplayName: wName,
 				Owner: workspacesv1alpha1.UserInfo{
-					Identity: workspacesv1alpha1.IdentityInfo{
-						UserSignupRef: &workspacesv1alpha1.UserSignupRef{
-							ObjectReference: corev1.ObjectReference{
-								Name:      "owner-user",
-								Namespace: ksns,
-							},
-						},
-					},
+					JwtInfo: workspacesv1alpha1.JwtInfo{},
+				},
+			},
+			Status: workspacesv1alpha1.InternalWorkspaceStatus{
+				Owner: workspacesv1alpha1.UserInfoStatus{
+					Username: "owner-user",
+				},
+				Space: &workspacesv1alpha1.SpaceInfo{
+					Name:   "space",
+					IsHome: true,
 				},
 			},
 		}
@@ -390,11 +395,11 @@ var _ = Describe("Read", func() {
 				},
 				&toolchainv1alpha1.UserSignup{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      expectedWorkspace.Spec.Owner.Identity.UserSignupRef.Name,
+						Name:      expectedWorkspace.Status.Owner.Username,
 						Namespace: ksns,
 					},
 					Status: toolchainv1alpha1.UserSignupStatus{
-						CompliantUsername: expectedWorkspace.Spec.Owner.Identity.UserSignupRef.Name,
+						CompliantUsername: expectedWorkspace.Status.Owner.Username,
 					},
 				},
 			)

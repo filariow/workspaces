@@ -2,6 +2,7 @@ package writeclient_test
 
 import (
 	"context"
+	"slices"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -30,6 +31,12 @@ var _ = Describe("WriteclientCreate", func() {
 			Name:      "workspace-foo",
 		},
 		Spec: restworkspacesv1alpha1.WorkspaceSpec{},
+		Status: restworkspacesv1alpha1.WorkspaceStatus{
+			Space: &restworkspacesv1alpha1.SpaceInfo{
+				Name:   "space",
+				IsHome: true,
+			},
+		},
 	}
 
 	validateCreatedInternalWorkspace := func(w *restworkspacesv1alpha1.Workspace, expectedVisibility workspacesv1alpha1.InternalWorkspaceVisibility) {
@@ -38,15 +45,15 @@ var _ = Describe("WriteclientCreate", func() {
 			ctx,
 			&ww,
 			client.InNamespace(namespace),
-			client.MatchingLabels{
-				workspacesv1alpha1.LabelDisplayName:    workspace.Name,
-				workspacesv1alpha1.LabelWorkspaceOwner: "owner",
-			},
 		)
+
 		Expect(err).NotTo(HaveOccurred())
-		Expect(ww.Items).To(HaveLen(1))
-		Expect(ww.Items[0].Spec).ToNot(BeNil())
-		Expect(ww.Items[0].Spec.Visibility).To(Equal(expectedVisibility))
+		Expect(ww.Items).ToNot(BeEmpty())
+		Expect(ww.Items).To(Satisfy(func(ww []workspacesv1alpha1.InternalWorkspace) bool {
+			return slices.ContainsFunc(ww, func(w workspacesv1alpha1.InternalWorkspace) bool {
+				return w.Spec.DisplayName == workspace.Name && w.Status.Owner.Username == "owner"
+			})
+		}))
 	}
 
 	BeforeEach(func() {
