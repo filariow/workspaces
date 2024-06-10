@@ -85,13 +85,13 @@ var _ = Describe("WriteclientUpdate", func() {
 				Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 					Visibility:  workspacesv1alpha1.InternalWorkspaceVisibilityPrivate,
 					DisplayName: workspace.Name,
+					Space:       "space",
 					Owner: workspacesv1alpha1.UserInfo{
 						JwtInfo: workspacesv1alpha1.JwtInfo{},
 					},
 				},
 				Status: workspacesv1alpha1.InternalWorkspaceStatus{
 					Space: &workspacesv1alpha1.SpaceInfo{
-						Name:   "space",
 						IsHome: true,
 					},
 					Owner: workspacesv1alpha1.UserInfoStatus{

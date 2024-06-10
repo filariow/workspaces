@@ -62,7 +62,8 @@ func getWorkspace(ctx context.Context, cli cli.Cli, ns, name string) (*workspace
 		if err := cli.Get(ctx, client.ObjectKeyFromObject(&w), &w); err != nil {
 			return false, client.IgnoreNotFound(err)
 		}
-		return true, nil
+
+		return w.Status.Owner.Username != "", nil
 	}); err != nil {
 		return nil, fmt.Errorf("error retrieving workspace %s/%s: :%w", w.Namespace, w.Name, err)
 	}

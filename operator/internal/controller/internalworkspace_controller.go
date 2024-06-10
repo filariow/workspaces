@@ -19,6 +19,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -68,6 +69,10 @@ func (r *WorkspaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	if err := r.ensureWorkspaceOwnerExists(ctx, &w); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	if err := r.ensureWorkspaceVisibilityIsSatisfied(ctx, w); err != nil {
 		l.Error(err, "error ensuring InternalWorkspace Visibility is satisfied")
 		return ctrl.Result{}, err
@@ -75,6 +80,33 @@ func (r *WorkspaceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	l.V(6).Info("InternalWorkspace's visibility is satisfied", "visibility", w.Spec.Visibility)
 	return ctrl.Result{}, nil
+}
+
+func (r *WorkspaceReconciler) ensureWorkspaceOwnerExists(ctx context.Context, w *workspacescomv1alpha1.InternalWorkspace) error {
+	uu := toolchainv1alpha1.UserSignupList{}
+	if err := r.List(ctx, &uu, client.InNamespace(r.KubespaceNamespace)); err != nil {
+		return err
+	}
+
+	w.Status.Space = &workspacescomv1alpha1.SpaceInfo{
+		IsHome: w.Spec.DisplayName == "default",
+	}
+	w.Status.Owner = workspacescomv1alpha1.UserInfoStatus{}
+	i := slices.IndexFunc(uu.Items, func(u toolchainv1alpha1.UserSignup) bool {
+		return u.Spec.IdentityClaims.Sub == w.Spec.Owner.JwtInfo.Sub
+	})
+
+	switch i {
+	case -1:
+		log.FromContext(ctx).Info("user signup not found", "sub", w.Spec.Owner.JwtInfo.Sub)
+		//TODO(@filariow): update status condition
+	default:
+		log.FromContext(ctx).Info("user signup found", "sub", w.Spec.Owner.JwtInfo.Sub)
+		w.Status.Owner.Username = uu.Items[i].Status.CompliantUsername
+		//TODO(@filariow): update status condition
+	}
+
+	return r.Status().Update(ctx, w)
 }
 
 func (r *WorkspaceReconciler) ensureWorkspaceVisibilityIsSatisfied(ctx context.Context, w workspacescomv1alpha1.InternalWorkspace) error {
@@ -114,6 +146,7 @@ func (r *WorkspaceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&workspacescomv1alpha1.InternalWorkspace{}).
 		Watches(&toolchainv1alpha1.SpaceBinding{}, handler.EnqueueRequestsFromMapFunc(r.mapSpaceBindingToWorkspace)).
+		Watches(&toolchainv1alpha1.UserSignup{}, handler.EnqueueRequestsFromMapFunc(r.mapUserSignupToWorkspace)).
 		Complete(r)
 }
 
@@ -132,6 +165,22 @@ func (r *WorkspaceReconciler) mapSpaceBindingToWorkspace(ctx context.Context, o 
 		{
 			NamespacedName: types.NamespacedName{
 				Name:      sn,
+				Namespace: r.WorkspacesNamespace,
+			},
+		},
+	}
+}
+
+func (r *WorkspaceReconciler) mapUserSignupToWorkspace(ctx context.Context, o client.Object) []reconcile.Request {
+	u, ok := o.(*toolchainv1alpha1.UserSignup)
+	if !ok || u.Status.CompliantUsername == "" {
+		return nil
+	}
+
+	return []reconcile.Request{
+		{
+			NamespacedName: types.NamespacedName{
+				Name:      u.Status.CompliantUsername,
 				Namespace: r.WorkspacesNamespace,
 			},
 		},

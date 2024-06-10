@@ -86,9 +86,8 @@ func (r *UserSignupReconciler) ensureWorkspaceIsPresentForHomeSpace(ctx context.
 		},
 	}
 	_, err := controllerutil.CreateOrUpdate(ctx, r.Client, w, func() error {
-		log.FromContext(ctx).Info("creating/updating workspace", "workspace", w)
-
 		w.Spec.DisplayName = "default"
+		w.Spec.Space = u.Status.HomeSpace
 		w.Spec.Visibility = workspacesv1alpha1.InternalWorkspaceVisibilityPrivate
 		w.Spec.Owner = workspacesv1alpha1.UserInfo{
 			JwtInfo: workspacesv1alpha1.JwtInfo{
@@ -102,19 +101,16 @@ func (r *UserSignupReconciler) ensureWorkspaceIsPresentForHomeSpace(ctx context.
 				FamilyName:        u.Spec.IdentityClaims.FamilyName,
 			},
 		}
-		w.Status.Owner.Username = u.Status.CompliantUsername
-		w.Status.Space = &workspacesv1alpha1.SpaceInfo{
-			IsHome: true,
-			Name:   u.Status.HomeSpace,
-		}
 
+		log.FromContext(ctx).Info("creating/updating workspace", "workspace", w)
 		return nil
 	})
 	if err != nil {
 		log.FromContext(ctx).Error(err, "error creating or updating workspace", "workspace", w)
 	}
 
-	return err
+	// update status
+	return nil
 }
 
 func (r *UserSignupReconciler) ensureWorkspaceIsDeleted(ctx context.Context, name string) error {

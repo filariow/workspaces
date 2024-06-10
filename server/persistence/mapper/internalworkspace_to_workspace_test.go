@@ -48,13 +48,13 @@ var _ = Describe("InternalworkspaceToWorkspace", func() {
 				},
 				Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 					DisplayName: displayName,
+					Space:       "space",
 				},
 				Status: workspacesv1alpha1.InternalWorkspaceStatus{
 					Owner: workspacesv1alpha1.UserInfoStatus{
 						Username: ownerName,
 					},
 					Space: &workspacesv1alpha1.SpaceInfo{
-						Name:   "space",
 						IsHome: true,
 					},
 				},

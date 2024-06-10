@@ -50,8 +50,10 @@ var _ = Describe("WriteclientCreate", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ww.Items).ToNot(BeEmpty())
 		Expect(ww.Items).To(Satisfy(func(ww []workspacesv1alpha1.InternalWorkspace) bool {
-			return slices.ContainsFunc(ww, func(w workspacesv1alpha1.InternalWorkspace) bool {
-				return w.Spec.DisplayName == workspace.Name && w.Status.Owner.Username == "owner"
+			return slices.ContainsFunc(ww, func(lw workspacesv1alpha1.InternalWorkspace) bool {
+				return lw.Spec.DisplayName == w.Name &&
+					lw.Status.Owner.Username == "owner" &&
+					lw.Spec.Visibility == expectedVisibility
 			})
 		}))
 	}

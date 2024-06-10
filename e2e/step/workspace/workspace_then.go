@@ -142,6 +142,7 @@ func thenTheWorkspaceVisibilityIsUpdatedTo(ctx context.Context, visibility strin
 	w := tcontext.RetrieveInternalWorkspace(ctx)
 	cli := tcontext.RetrieveHostClient(ctx)
 	wk := client.ObjectKeyFromObject(&w)
+
 	return poll.WaitForConditionImmediately(ctx, func(ctx context.Context) (done bool, err error) {
 		if err := cli.Get(ctx, wk, &w); err != nil {
 			return false, err
