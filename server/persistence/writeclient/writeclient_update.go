@@ -2,7 +2,6 @@ package writeclient
 
 import (
 	"context"
-	ilog "log"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -36,7 +35,6 @@ func (c *WriteClient) UpdateUserWorkspace(ctx context.Context, user string, work
 	ciw := workspacesv1alpha1.InternalWorkspace{}
 	key := iwclient.SpaceKey{Owner: workspace.Namespace, Name: workspace.Name}
 	if err := c.workspacesReader.GetAsUser(ctx, user, key, &ciw); err != nil {
-		ilog.Println(err)
 		return kerrors.NewNotFound(
 			restworkspacesv1alpha1.GroupVersion.WithResource("workspaces").GroupResource(),
 			workspace.Name)

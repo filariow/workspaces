@@ -6,6 +6,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -76,13 +77,19 @@ var _ = Describe("WriteclientUpdate", func() {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      workspace.Name + "-fddjk",
 					Namespace: workspacesNamespace,
-					Labels: map[string]string{
-						workspacesv1alpha1.LabelDisplayName:    workspace.Name,
-						workspacesv1alpha1.LabelWorkspaceOwner: user,
-					},
 				},
 				Spec: workspacesv1alpha1.InternalWorkspaceSpec{
-					Visibility: workspacesv1alpha1.InternalWorkspaceVisibilityPrivate,
+					Visibility:  workspacesv1alpha1.InternalWorkspaceVisibilityPrivate,
+					DisplayName: workspace.Name,
+					Owner: workspacesv1alpha1.UserInfo{
+						Identity: workspacesv1alpha1.IdentityInfo{
+							UserSignupRef: &workspacesv1alpha1.UserSignupRef{
+								ObjectReference: corev1.ObjectReference{
+									Name: user,
+								},
+							},
+						},
+					},
 				},
 			}
 		})
@@ -133,7 +140,7 @@ var _ = Describe("WriteclientUpdate", func() {
 				}
 				userSignup := toolchainv1alpha1.UserSignup{
 					ObjectMeta: metav1.ObjectMeta{
-						Name:      workspace.Namespace,
+						Name:      user,
 						Namespace: kubesawNamespace,
 					},
 					Status: toolchainv1alpha1.UserSignupStatus{
@@ -141,7 +148,7 @@ var _ = Describe("WriteclientUpdate", func() {
 					},
 				}
 
-				beforeInitializeCli(&internalWorkspace, &workspace, &spaceBinding, &userSignup)
+				beforeInitializeCli(&internalWorkspace, &spaceBinding, &userSignup)
 			})
 
 			It("should update if the user is the owner", func() {
