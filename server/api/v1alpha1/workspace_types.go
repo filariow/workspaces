@@ -72,12 +72,16 @@ type SpaceInfo struct {
 	IsHome bool `json:"isHome"`
 }
 
+// UserInfoStatus User info stored in the status
+type UserInfoStatus struct {
+	//+optional
+	Username string `json:"username,omitempty"`
+}
+
 // WorkspaceStatus defines the observed state of Workspace
 type WorkspaceStatus struct {
 	//+optional
 	Space *SpaceInfo `json:"space,omitempty"`
-	//+optional
-	Owner *UserInfo `json:"owner,omitempty"`
 }
 
 //+kubebuilder:object:root=true

@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -48,21 +47,6 @@ const (
 type UserInfo struct {
 	//+required
 	JwtInfo JwtInfo `json:"jwtInfo"`
-
-	//+required
-	Identity IdentityInfo `json:"identity"`
-}
-
-// +kubebuilder:validation:MaxProperties:=1
-// IdentityInfo decouples integration with an identity management system
-type IdentityInfo struct {
-	//+optional
-	UserSignupRef *UserSignupRef `json:"userSignupRef,omitempty"`
-}
-
-// UserSignupRef reference to an UserSignup
-type UserSignupRef struct {
-	corev1.ObjectReference `json:",inline"`
 }
 
 // JwtInfo contains information extracted from the user JWT Token
@@ -88,7 +72,7 @@ type JwtInfo struct {
 
 // InternalWorkspaceSpec defines the desired state of Workspace
 type InternalWorkspaceSpec struct {
-	//+DisplayName
+	//+required
 	DisplayName string `json:"displayName"`
 	//+required
 	Visibility InternalWorkspaceVisibility `json:"visibility"`
@@ -104,11 +88,21 @@ type SpaceInfo struct {
 	IsHome bool `json:"isHome"`
 }
 
+// UserInfoStatus User info stored in the status
+type UserInfoStatus struct {
+	//+optional
+	Username string `json:"username,omitempty"`
+}
+
 // InternalWorkspaceStatus defines the observed state of Workspace
 type InternalWorkspaceStatus struct {
 	// Space contains information about the underlying Space
 	//+optional
 	Space *SpaceInfo `json:"space,omitempty"`
+
+	// Owner contains information on the owner
+	//+optional
+	Owner UserInfoStatus `json:"owner,omitempty"`
 }
 
 //+kubebuilder:object:root=true
