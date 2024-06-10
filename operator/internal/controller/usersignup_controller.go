@@ -21,7 +21,6 @@ import (
 	"errors"
 	"slices"
 
-	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -102,18 +101,8 @@ func (r *UserSignupReconciler) ensureWorkspaceIsPresentForHomeSpace(ctx context.
 				GivenName:         u.Spec.IdentityClaims.GivenName,
 				FamilyName:        u.Spec.IdentityClaims.FamilyName,
 			},
-			Identity: workspacesv1alpha1.IdentityInfo{
-				UserSignupRef: &workspacesv1alpha1.UserSignupRef{
-					ObjectReference: corev1.ObjectReference{
-						APIVersion: u.APIVersion,
-						Kind:       u.Kind,
-						Name:       u.Name,
-						Namespace:  u.Namespace,
-						UID:        u.UID,
-					},
-				},
-			},
 		}
+		w.Status.Owner.Username = u.Status.CompliantUsername
 		w.Status.Space = &workspacesv1alpha1.SpaceInfo{
 			IsHome: true,
 			Name:   u.Status.HomeSpace,
@@ -138,7 +127,7 @@ func (r *UserSignupReconciler) ensureWorkspaceIsDeleted(ctx context.Context, nam
 	// look for user's home InternalWorkspace
 	i := -1
 	if i = slices.IndexFunc(ww.Items, func(w workspacesv1alpha1.InternalWorkspace) bool {
-		return w.Status.Space.IsHome && w.Spec.Owner.Identity.UserSignupRef.Name == name
+		return w.Status.Space.IsHome && w.Status.Owner.Username == name
 	}); i == -1 {
 		// workspace not found, nothing to delete
 		return nil
