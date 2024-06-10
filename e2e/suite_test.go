@@ -38,13 +38,6 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Printf("panic: %v", err)
-			panic(err)
-		}
-	}()
-
 	// parse CLI arguments
 	pflag.Parse()
 	opts.Paths = pflag.Args()

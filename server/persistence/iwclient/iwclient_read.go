@@ -64,10 +64,7 @@ func (c *Client) fetchInternalWorkspaceByLabel(
 	_ ...client.GetOption,
 ) (*workspacesv1alpha1.InternalWorkspace, error) {
 	ww := workspacesv1alpha1.InternalWorkspaceList{}
-	opts := []client.ListOption{
-		// client.InNamespace(c.kubesawNamespace),
-	}
-	if err := c.backend.List(ctx, &ww, opts...); err != nil {
+	if err := c.backend.List(ctx, &ww); err != nil {
 		return nil, err
 	}
 	if len(ww.Items) == 0 {
