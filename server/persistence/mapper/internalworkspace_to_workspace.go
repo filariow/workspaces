@@ -27,13 +27,13 @@ func (m *Mapper) InternalWorkspaceToWorkspace(workspace *workspacesv1alpha1.Inte
 		},
 		Spec: restworkspacesv1alpha1.WorkspaceSpec{
 			Visibility: restworkspacesv1alpha1.WorkspaceVisibility(workspace.Spec.Visibility),
-			Owner: restworkspacesv1alpha1.UserInfo{
-				Email: workspace.Spec.Owner.JwtInfo.Email,
-			},
 		},
 		Status: restworkspacesv1alpha1.WorkspaceStatus{
 			Space: &restworkspacesv1alpha1.SpaceInfo{
 				Name: workspace.Status.Space.Name,
+			},
+			Owner: &restworkspacesv1alpha1.UserInfoStatus{
+				Email: workspace.Spec.Owner.JwtInfo.Email,
 			},
 		},
 	}, nil

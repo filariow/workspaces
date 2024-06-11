@@ -29,19 +29,10 @@ const (
 	WorkspaceVisibilityPrivate WorkspaceVisibility = "private"
 )
 
-// UserInfo contains information about a user identity
-type UserInfo struct {
-	//+required
-	Email string `json:"email"`
-}
-
 // WorkspaceSpec defines the desired state of Workspace
 type WorkspaceSpec struct {
 	//+required
 	Visibility WorkspaceVisibility `json:"visibility"`
-
-	//+required
-	Owner UserInfo `json:"owner"`
 }
 
 // SpaceInfo Information about a Space
@@ -52,14 +43,15 @@ type SpaceInfo struct {
 
 // UserInfoStatus User info stored in the status
 type UserInfoStatus struct {
-	//+optional
-	Username string `json:"username,omitempty"`
+	//+required
+	Email string `json:"email"`
 }
 
 // WorkspaceStatus defines the observed state of Workspace
 type WorkspaceStatus struct {
 	//+optional
-	Space *SpaceInfo `json:"space,omitempty"`
+	Space *SpaceInfo      `json:"space,omitempty"`
+	Owner *UserInfoStatus `json:"owner,omitempty"`
 }
 
 //+kubebuilder:object:root=true
