@@ -31,7 +31,6 @@ var _ = Describe("InternalworkspaceToWorkspace", func() {
 			Expect(w.Status).ToNot(BeNil())
 			Expect(w.Status.Space).ToNot(BeNil())
 			Expect(w.Status.Space.Name).To(Equal("space"))
-			Expect(w.Status.Space.IsHome).To(Equal(true))
 		}
 
 		BeforeEach(func() {

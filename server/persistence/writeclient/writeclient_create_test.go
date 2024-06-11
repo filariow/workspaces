@@ -33,8 +33,7 @@ var _ = Describe("WriteclientCreate", func() {
 		Spec: restworkspacesv1alpha1.WorkspaceSpec{},
 		Status: restworkspacesv1alpha1.WorkspaceStatus{
 			Space: &restworkspacesv1alpha1.SpaceInfo{
-				Name:   "space",
-				IsHome: true,
+				Name: "space",
 			},
 		},
 	}

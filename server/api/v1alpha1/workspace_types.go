@@ -31,28 +31,8 @@ const (
 
 // UserInfo contains information about a user identity
 type UserInfo struct {
-	JwtInfo JwtInfo `json:"jwtInfo"`
-}
-
-// JwtInfo contains information extracted from the user JWT Token
-type JwtInfo struct {
 	//+required
 	Email string `json:"email"`
-	//+required
-	UserId string `json:"userId"`
-	//+required
-	Sub string `json:"sub"`
-
-	//+optional
-	PreferredUsername string `json:"preferredUsername,omitempty"`
-	//+optional
-	AccountId string `json:"accountId,omitempty"`
-	//+optional
-	Company string `json:"company,omitempty"`
-	//+optional
-	GivenName string `json:"giveName,omitempty"`
-	//+optional
-	FamilyName string `json:"familyName,omitempty"`
 }
 
 // WorkspaceSpec defines the desired state of Workspace
@@ -68,8 +48,6 @@ type WorkspaceSpec struct {
 type SpaceInfo struct {
 	//+required
 	Name string `json:"name"`
-	//+required
-	IsHome bool `json:"isHome"`
 }
 
 // UserInfoStatus User info stored in the status
