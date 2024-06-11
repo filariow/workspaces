@@ -33,8 +33,6 @@ const (
 
 	// LabelInternalDomain domain for internal labels
 	LabelInternalDomain string = "internal.workspaces.konflux.io/"
-	// LabelDisplayName label for storing the user chosen display-name for the workspace
-	LabelDisplayName string = LabelInternalDomain + "display-name"
 
 	// PublicViewerName the name of the KubeSaw's PublicViewer user
 	PublicViewerName string = "kubesaw-authenticated"

@@ -56,16 +56,17 @@ var _ = Describe("Read", func() {
 		})
 	})
 
-	When("owner label is not set on workspace", func() {
+	When("owner is not set on workspace", func() {
 		// given
 		c = buildCache(wsns, ksns,
 			&workspacesv1alpha1.InternalWorkspace{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      generateName("no-owner-label"),
 					Namespace: wsns,
-					Labels: map[string]string{
-						workspacesv1alpha1.LabelDisplayName: "no-owner-label",
-					},
+					Labels:    map[string]string{},
+				},
+				Spec: workspacesv1alpha1.InternalWorkspaceSpec{
+					DisplayName: "no-owner-label",
 				},
 			},
 			&toolchainv1alpha1.SpaceBinding{

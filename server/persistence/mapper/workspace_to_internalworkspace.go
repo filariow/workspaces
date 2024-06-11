@@ -12,7 +12,7 @@ import (
 // WorkspaceToInternalWorkspace builds an InternalWorkspace starting from a Workspace.
 // IMPORTANT: The Name and Namespace fields are left empty.
 func (m *Mapper) WorkspaceToInternalWorkspace(workspace *restworkspacesv1alpha1.Workspace) (*workspacesv1alpha1.InternalWorkspace, error) {
-	ll := map[string]string{workspacesv1alpha1.LabelDisplayName: workspace.GetName()}
+	ll := map[string]string{}
 	for k, v := range workspace.GetLabels() {
 		if !strings.HasPrefix(k, workspacesv1alpha1.LabelInternalDomain) {
 			ll[k] = v
