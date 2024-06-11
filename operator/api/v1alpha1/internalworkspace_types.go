@@ -60,7 +60,7 @@ type JwtInfo struct {
 	//+optional
 	Company string `json:"company,omitempty"`
 	//+optional
-	GivenName string `json:"giveName,omitempty"`
+	GivenName string `json:"givenName,omitempty"`
 	//+optional
 	FamilyName string `json:"familyName,omitempty"`
 }
