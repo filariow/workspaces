@@ -12,7 +12,6 @@ import (
 	toolchainv1alpha1 "github.com/codeready-toolchain/api/api/v1alpha1"
 	workspacesv1alpha1 "github.com/konflux-workspaces/workspaces/operator/api/v1alpha1"
 
-	icache "github.com/konflux-workspaces/workspaces/server/persistence/internal/cache"
 	"github.com/konflux-workspaces/workspaces/server/persistence/iwclient"
 )
 
@@ -34,9 +33,13 @@ var _ = Describe("Read", func() {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      generateName("no-space-binding"),
 					Namespace: wsns,
-					Labels: map[string]string{
-						workspacesv1alpha1.LabelWorkspaceOwner: "owner-user",
-						workspacesv1alpha1.LabelDisplayName:    "no-space-binding",
+				},
+				Spec: workspacesv1alpha1.InternalWorkspaceSpec{
+					DisplayName: "no-space-binding",
+				},
+				Status: workspacesv1alpha1.InternalWorkspaceStatus{
+					Owner: workspacesv1alpha1.UserInfoStatus{
+						Username: "owner-user",
 					},
 				},
 			})
@@ -352,10 +355,6 @@ var _ = Describe("Read", func() {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      generateName(wName),
 				Namespace: wsns,
-				Labels: map[string]string{
-					workspacesv1alpha1.LabelWorkspaceOwner: "owner-user",
-					icache.LabelWorkspaceVisibility:        string(workspacesv1alpha1.InternalWorkspaceVisibilityCommunity),
-				},
 			},
 			Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 				Visibility:  workspacesv1alpha1.InternalWorkspaceVisibilityCommunity,
