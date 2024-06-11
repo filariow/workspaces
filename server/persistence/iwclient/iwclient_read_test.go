@@ -110,7 +110,7 @@ var _ = Describe("Read", func() {
 				Owner: workspacesv1alpha1.UserInfoStatus{
 					Username: "owner-user",
 				},
-				Space: &workspacesv1alpha1.SpaceInfo{
+				Space: workspacesv1alpha1.SpaceInfo{
 					IsHome: true,
 					Name:   "space",
 				},
@@ -284,7 +284,7 @@ var _ = Describe("Read", func() {
 					},
 				},
 				Status: workspacesv1alpha1.InternalWorkspaceStatus{
-					Space: &workspacesv1alpha1.SpaceInfo{
+					Space: workspacesv1alpha1.SpaceInfo{
 						IsHome: true,
 						Name:   "space",
 					},
@@ -368,7 +368,7 @@ var _ = Describe("Read", func() {
 				Owner: workspacesv1alpha1.UserInfoStatus{
 					Username: "owner-user",
 				},
-				Space: &workspacesv1alpha1.SpaceInfo{
+				Space: workspacesv1alpha1.SpaceInfo{
 					IsHome: true,
 					Name:   "space",
 				},

@@ -93,7 +93,7 @@ type UserInfoStatus struct {
 type InternalWorkspaceStatus struct {
 	// Space contains information about the underlying Space
 	//+optional
-	Space *SpaceInfo `json:"space,omitempty"`
+	Space SpaceInfo `json:"space,omitempty"`
 
 	// Owner contains information on the owner
 	//+optional

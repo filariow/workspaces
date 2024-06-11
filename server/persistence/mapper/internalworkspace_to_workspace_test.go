@@ -52,7 +52,7 @@ var _ = Describe("InternalworkspaceToWorkspace", func() {
 					Owner: workspacesv1alpha1.UserInfoStatus{
 						Username: ownerName,
 					},
-					Space: &workspacesv1alpha1.SpaceInfo{
+					Space: workspacesv1alpha1.SpaceInfo{
 						IsHome: true,
 						Name:   displayName,
 					},

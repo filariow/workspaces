@@ -102,7 +102,7 @@ var _ = Describe("List", func() {
 				Owner: workspacesv1alpha1.UserInfoStatus{
 					Username: "owner-user",
 				},
-				Space: &workspacesv1alpha1.SpaceInfo{
+				Space: workspacesv1alpha1.SpaceInfo{
 					IsHome: false,
 					Name:   "space",
 				},
@@ -170,7 +170,7 @@ var _ = Describe("List", func() {
 					Visibility:  workspacesv1alpha1.InternalWorkspaceVisibilityPrivate,
 				},
 				Status: workspacesv1alpha1.InternalWorkspaceStatus{
-					Space: &workspacesv1alpha1.SpaceInfo{
+					Space: workspacesv1alpha1.SpaceInfo{
 						IsHome: false,
 						Name:   wName,
 					},
@@ -249,7 +249,7 @@ var _ = Describe("List", func() {
 						Owner: workspacesv1alpha1.UserInfoStatus{
 							Username: "owner-user",
 						},
-						Space: &workspacesv1alpha1.SpaceInfo{
+						Space: workspacesv1alpha1.SpaceInfo{
 							Name: "space",
 						},
 					},
@@ -299,7 +299,7 @@ var _ = Describe("List", func() {
 					Owner: workspacesv1alpha1.UserInfoStatus{
 						Username: "owner-user",
 					},
-					Space: &workspacesv1alpha1.SpaceInfo{
+					Space: workspacesv1alpha1.SpaceInfo{
 						IsHome: false,
 						Name:   "space",
 					},
@@ -372,7 +372,7 @@ var _ = Describe("List", func() {
 					Owner: workspacesv1alpha1.UserInfoStatus{
 						Username: "owner-user",
 					},
-					Space: &workspacesv1alpha1.SpaceInfo{
+					Space: workspacesv1alpha1.SpaceInfo{
 						IsHome: false,
 						Name:   "space",
 					},

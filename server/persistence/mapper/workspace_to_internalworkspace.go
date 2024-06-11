@@ -34,7 +34,7 @@ func (m *Mapper) WorkspaceToInternalWorkspace(workspace *restworkspacesv1alpha1.
 			},
 		},
 		Status: workspacesv1alpha1.InternalWorkspaceStatus{
-			Space: &workspacesv1alpha1.SpaceInfo{
+			Space: workspacesv1alpha1.SpaceInfo{
 				IsHome: workspace.Name == "default",
 				Name:   workspace.Status.Space.Name,
 			},

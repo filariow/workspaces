@@ -90,7 +90,7 @@ var _ = Describe("WriteclientUpdate", func() {
 					},
 				},
 				Status: workspacesv1alpha1.InternalWorkspaceStatus{
-					Space: &workspacesv1alpha1.SpaceInfo{
+					Space: workspacesv1alpha1.SpaceInfo{
 						IsHome: true,
 						Name:   "space",
 					},
