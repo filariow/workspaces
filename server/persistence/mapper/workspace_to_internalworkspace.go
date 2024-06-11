@@ -26,7 +26,6 @@ func (m *Mapper) WorkspaceToInternalWorkspace(workspace *restworkspacesv1alpha1.
 		},
 		Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 			DisplayName: workspace.Name,
-			Space:       workspace.Status.Space.Name,
 			Visibility:  workspacesv1alpha1.InternalWorkspaceVisibility(workspace.Spec.Visibility),
 			Owner: workspacesv1alpha1.UserInfo{
 				JwtInfo: workspacesv1alpha1.JwtInfo{
@@ -37,6 +36,7 @@ func (m *Mapper) WorkspaceToInternalWorkspace(workspace *restworkspacesv1alpha1.
 		Status: workspacesv1alpha1.InternalWorkspaceStatus{
 			Space: &workspacesv1alpha1.SpaceInfo{
 				IsHome: workspace.Name == "default",
+				Name:   workspace.Status.Space.Name,
 			},
 			Owner: workspacesv1alpha1.UserInfoStatus{
 				Username: workspace.Namespace,

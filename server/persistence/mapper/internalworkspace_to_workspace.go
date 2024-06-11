@@ -33,7 +33,7 @@ func (m *Mapper) InternalWorkspaceToWorkspace(workspace *workspacesv1alpha1.Inte
 		},
 		Status: restworkspacesv1alpha1.WorkspaceStatus{
 			Space: &restworkspacesv1alpha1.SpaceInfo{
-				Name: workspace.Spec.Space,
+				Name: workspace.Status.Space.Name,
 			},
 		},
 	}, nil

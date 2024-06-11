@@ -90,6 +90,7 @@ func (r *WorkspaceReconciler) ensureWorkspaceOwnerExists(ctx context.Context, w 
 
 	w.Status.Space = &workspacescomv1alpha1.SpaceInfo{
 		IsHome: w.Spec.DisplayName == "default",
+		Name:   w.Name,
 	}
 	w.Status.Owner = workspacescomv1alpha1.UserInfoStatus{}
 	i := slices.IndexFunc(uu.Items, func(u toolchainv1alpha1.UserSignup) bool {

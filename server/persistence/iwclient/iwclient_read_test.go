@@ -102,7 +102,6 @@ var _ = Describe("Read", func() {
 			},
 			Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 				DisplayName: "owner-ws",
-				Space:       "space",
 				Owner: workspacesv1alpha1.UserInfo{
 					JwtInfo: workspacesv1alpha1.JwtInfo{},
 				},
@@ -113,6 +112,7 @@ var _ = Describe("Read", func() {
 				},
 				Space: &workspacesv1alpha1.SpaceInfo{
 					IsHome: true,
+					Name:   "space",
 				},
 			},
 		}
@@ -279,7 +279,6 @@ var _ = Describe("Read", func() {
 				},
 				Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 					DisplayName: wName,
-					Space:       "space",
 					Owner: workspacesv1alpha1.UserInfo{
 						JwtInfo: workspacesv1alpha1.JwtInfo{},
 					},
@@ -287,6 +286,7 @@ var _ = Describe("Read", func() {
 				Status: workspacesv1alpha1.InternalWorkspaceStatus{
 					Space: &workspacesv1alpha1.SpaceInfo{
 						IsHome: true,
+						Name:   "space",
 					},
 					Owner: workspacesv1alpha1.UserInfoStatus{
 						Username: "owner-user",
@@ -360,7 +360,6 @@ var _ = Describe("Read", func() {
 			Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 				Visibility:  workspacesv1alpha1.InternalWorkspaceVisibilityCommunity,
 				DisplayName: wName,
-				Space:       "space",
 				Owner: workspacesv1alpha1.UserInfo{
 					JwtInfo: workspacesv1alpha1.JwtInfo{},
 				},
@@ -371,6 +370,7 @@ var _ = Describe("Read", func() {
 				},
 				Space: &workspacesv1alpha1.SpaceInfo{
 					IsHome: true,
+					Name:   "space",
 				},
 			},
 		}

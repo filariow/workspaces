@@ -97,11 +97,14 @@ var _ = Describe("List", func() {
 			},
 			Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 				DisplayName: wName,
-				Space:       "space",
 			},
 			Status: workspacesv1alpha1.InternalWorkspaceStatus{
 				Owner: workspacesv1alpha1.UserInfoStatus{
 					Username: "owner-user",
+				},
+				Space: &workspacesv1alpha1.SpaceInfo{
+					IsHome: false,
+					Name:   "space",
 				},
 			},
 		}
@@ -164,12 +167,12 @@ var _ = Describe("List", func() {
 				},
 				Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 					DisplayName: wName,
-					Space:       wName,
 					Visibility:  workspacesv1alpha1.InternalWorkspaceVisibilityPrivate,
 				},
 				Status: workspacesv1alpha1.InternalWorkspaceStatus{
 					Space: &workspacesv1alpha1.SpaceInfo{
 						IsHome: false,
+						Name:   wName,
 					},
 					Owner: workspacesv1alpha1.UserInfoStatus{
 						Username: "owner-user",
@@ -246,6 +249,9 @@ var _ = Describe("List", func() {
 						Owner: workspacesv1alpha1.UserInfoStatus{
 							Username: "owner-user",
 						},
+						Space: &workspacesv1alpha1.SpaceInfo{
+							Name: "space",
+						},
 					},
 				},
 				&toolchainv1alpha1.SpaceBinding{
@@ -288,11 +294,14 @@ var _ = Describe("List", func() {
 				},
 				Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 					DisplayName: wName,
-					Space:       "space",
 				},
 				Status: workspacesv1alpha1.InternalWorkspaceStatus{
 					Owner: workspacesv1alpha1.UserInfoStatus{
 						Username: "owner-user",
+					},
+					Space: &workspacesv1alpha1.SpaceInfo{
+						IsHome: false,
+						Name:   "space",
 					},
 				},
 			}
@@ -358,11 +367,14 @@ var _ = Describe("List", func() {
 				Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 					Visibility:  workspacesv1alpha1.InternalWorkspaceVisibilityCommunity,
 					DisplayName: wName,
-					Space:       "space",
 				},
 				Status: workspacesv1alpha1.InternalWorkspaceStatus{
 					Owner: workspacesv1alpha1.UserInfoStatus{
 						Username: "owner-user",
+					},
+					Space: &workspacesv1alpha1.SpaceInfo{
+						IsHome: false,
+						Name:   "space",
 					},
 				},
 			}

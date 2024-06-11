@@ -48,7 +48,7 @@ func (c *Client) fetchMissingWorkspaces(ctx context.Context, user string, worksp
 	fsp := make([]string, 0, len(sbb.Items))
 	for i, sb := range sbb.Items {
 		if slices.ContainsFunc(workspaces.Items, func(w workspacesv1alpha1.InternalWorkspace) bool {
-			return w.Spec.Space == sb.Spec.Space
+			return w.Status.Space.Name == sb.Spec.Space
 		}) {
 			continue
 		}
@@ -61,7 +61,7 @@ func (c *Client) fetchMissingWorkspaces(ctx context.Context, user string, worksp
 	// add workspaces to which the user has direct access to return list
 	for _, s := range fsp {
 		if i := slices.IndexFunc(aww.Items, func(w workspacesv1alpha1.InternalWorkspace) bool {
-			return w.Spec.Space == s
+			return w.Status.Space.Name == s
 		}); i != -1 {
 			workspaces.Items = append(workspaces.Items, aww.Items[i])
 		}

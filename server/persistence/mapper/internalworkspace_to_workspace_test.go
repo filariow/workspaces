@@ -30,15 +30,15 @@ var _ = Describe("InternalworkspaceToWorkspace", func() {
 			Expect(w.Spec).ToNot(BeNil())
 			Expect(w.Status).ToNot(BeNil())
 			Expect(w.Status.Space).ToNot(BeNil())
-			Expect(w.Status.Space.Name).To(Equal("space"))
+			Expect(w.Status.Space.Name).To(Equal(displayName))
 		}
 
 		BeforeEach(func() {
 			// given
 			internalWorkspace = workspacesv1alpha1.InternalWorkspace{
 				ObjectMeta: metav1.ObjectMeta{
-					GenerateName: displayName,
-					Namespace:    workspacesNamespace,
+					Name:      displayName,
+					Namespace: workspacesNamespace,
 					Labels: map[string]string{
 						"expected-label": "not-empty",
 						workspacesv1alpha1.LabelInternalDomain + "not-expected-label": "not-empty",
@@ -47,7 +47,6 @@ var _ = Describe("InternalworkspaceToWorkspace", func() {
 				},
 				Spec: workspacesv1alpha1.InternalWorkspaceSpec{
 					DisplayName: displayName,
-					Space:       "space",
 				},
 				Status: workspacesv1alpha1.InternalWorkspaceStatus{
 					Owner: workspacesv1alpha1.UserInfoStatus{
@@ -55,6 +54,7 @@ var _ = Describe("InternalworkspaceToWorkspace", func() {
 					},
 					Space: &workspacesv1alpha1.SpaceInfo{
 						IsHome: true,
+						Name:   displayName,
 					},
 				},
 			}

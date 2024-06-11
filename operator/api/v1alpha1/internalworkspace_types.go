@@ -73,14 +73,14 @@ type InternalWorkspaceSpec struct {
 	Visibility InternalWorkspaceVisibility `json:"visibility"`
 	//+required
 	Owner UserInfo `json:"owner"`
-	//+required
-	Space string `json:"space"`
 }
 
 // SpaceInfo Information about a Space
 type SpaceInfo struct {
 	//+required
 	IsHome bool `json:"isHome"`
+	//+required
+	Name string `json:"name"`
 }
 
 // UserInfoStatus User info stored in the status
