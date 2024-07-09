@@ -1,5 +1,9 @@
 http:
   services:
+    kubesaw:
+      loadBalancer:
+        servers:
+          - url: "http://api.toolchain-host-operator.svc.cluster.local:80"
     web:
       loadBalancer:
         servers:
@@ -12,11 +16,19 @@ http:
       rule: PathPrefix(`/apis/workspaces.konflux.io`) && ( Method(`GET`) || Method(`PUT`) )
       middlewares:
         - jwt-authorizer
+      priority: 1
     app-healthz:
       service: web
       entrypoints:
       - web
       rule: Path(`/healthz`)
+      priority: 20
+    kubesaw:
+      service: kubesaw
+      entrypoints:
+      - web
+      rule: PathPrefix(`/`)
+      priority: 5
 
 # Middlewares
   middlewares:

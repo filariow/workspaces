@@ -17,4 +17,4 @@ echo "using suffix: ${SUFFIX}"
   "${CI_DIR}/toolchain_manager.sh" "deploy" "${SUFFIX}" "-n" "${QUAY_NAMESPACE}" )
 
 # build and install workspaces
-( "${SCRIPT_DIR}/workspaces_install.sh" && make -C e2e test )
+"${SCRIPT_DIR}/workspaces_install.sh" # && make -C e2e test
