@@ -24,6 +24,7 @@ YQ ?= $(LOCALBIN)/yq
 
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 GOLANG_CI ?= $(GO) run -modfile $(shell dirname $(ROOT_DIR))/hack/tools/golang-ci/go.mod github.com/golangci/golangci-lint/cmd/golangci-lint
+GINKGO ?= $(GO) run -modfile $(shell dirname $(ROOT_DIR))/hack/tools/ginkgo/go.mod github.com/onsi/ginkgo/ginkgo
 
 MANIFEST_TARBALL := $(OUTDIR)/server.tar.gz
 JWKS_URL := https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/certs
@@ -121,11 +122,11 @@ fmt:
 
 .PHONY: test
 test: generate-code
-	$(GO) test ./...
+	$(GINKGO) test ./...
 
 .PHONY: test-with-coverage
 test-with-coverage: generate-code
-	$(GO) test ./... -covermode=atomic -coverprofile cover.out
+	$(GINKGO) test ./... -covermode=atomic -coverprofile cover.out
 
 .PHONY: docker-build
 docker-build:
