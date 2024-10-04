@@ -25,6 +25,14 @@ func whenAnUserOnboards(ctx context.Context) (context.Context, error) {
 	return tcontext.InjectUser(ctx, *u), nil
 }
 
+func whenAnUserWithSubOnboards(ctx context.Context, sub string) (context.Context, error) {
+	u, err := OnBoardUserInKubespaceNamespace(ctx, DefaultUserName, WithSub(sub))
+	if err != nil {
+		return ctx, err
+	}
+	return tcontext.InjectUser(ctx, *u), nil
+}
+
 func whenUserRequestsTheListOfWorkspaces(ctx context.Context) (context.Context, error) {
 	c, err := wrest.BuildWorkspacesClient(ctx)
 	if err != nil {

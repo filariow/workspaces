@@ -8,3 +8,8 @@ Feature: Workspace lifecycle
   Scenario: role is set on workspace for owner user 
     When A workspace is created for an user
     Then The owner is granted admin access to the workspace
+
+  Scenario: user with long sub onboarding
+    When An user with sub "my-sub-is-longer-than-20-character" onboards
+    Then Default workspace is created for them
+    And  The workspace visibility is set to "private"

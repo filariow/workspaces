@@ -8,6 +8,7 @@ func RegisterSteps(ctx *godog.ScenarioContext) {
 
 	// when
 	ctx.When(`^An user onboards$`, whenAnUserOnboards)
+	ctx.When(`^An user with sub "([^"]*)" onboards$`, whenAnUserWithSubOnboards)
 
 	ctx.When(`^The user requests the list of workspaces$`, whenUserRequestsTheListOfWorkspaces)
 	ctx.When(`^The user requests their default workspace$`, whenUserRequestsTheirDefaultWorkspace)
